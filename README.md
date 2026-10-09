@@ -2,7 +2,7 @@
 
 Cyberdefense Hackathon, SF Tech Week, 9 Oct 2026 (tokens& · AWS Builder Loft). Tracks: threat discovery + continuous defense.
 
-![the room](web/room.jpg)
+![Is your screen safe?](web/are-you-safe.jpg)
 
 **Are you safe?** Forty laptops in this room, every screen readable by any phone camera: repos, `.env` files,
 dashboards, chats. One camera on a tripod and the whole room's secrets are on a recording. ScreenShield is what
