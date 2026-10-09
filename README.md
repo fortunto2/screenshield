@@ -14,6 +14,15 @@ stream (screen · camera · SRT/RTMP) ─► keyframes ─► OCR + QR (Apple Vi
       ─► responder agent (open model on AkashML): redact · revoke · block · notify · retention · incident
 ```
 
+## Two loops, two speeds
+
+- **Fast loop, on the device, no LLM** (`shield live`): keyframes → OCR/QR → deterministic detectors → gates →
+  blur → events. Sub-second, works offline. This is the protection module.
+- **Slow loop, the agent, over the archive** (`shield audit`): crawls the recording library, calls a vision model
+  only where regexes are blind, verifies and decides per policy, cleans old recordings (redact / retention / hold),
+  writes the evidence log, and **produces the dataset the fast loop learns from** (`dataset/`: labelled keyframes
+  and expectations that feed `shield eval`). Batch, autonomous, cheap to run nightly.
+
 ## Try it (macOS, 2 minutes)
 
 ```bash
@@ -23,6 +32,7 @@ uv run shield eval                # OCR + detectors over fixtures/, catch rate
 uv run shield scan fixtures/lecture-7s.mp4     # findings as JSON lines
 uv run shield live screen --limit 20 -v        # watch your own screen, record, store
 uv run shield respond .shield/findings.jsonl   # the agent decides what to do (dry-run)
+uv run shield audit ./recordings               # slow loop over an archive → dataset/ + report.json
 uv run shield dashboard                        # http://127.0.0.1:8787
 uv run shield ingest-synth --rooms 10000       # fleet-scale telemetry into ClickHouse
 ```

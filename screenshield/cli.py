@@ -9,6 +9,7 @@ import time
 from dataclasses import asdict
 from pathlib import Path
 
+from .audit import audit
 from .dashboard import serve
 from .detectors import detect_all
 from .evalrun import run_eval
@@ -99,6 +100,15 @@ def main(argv: list[str] | None = None) -> int:
     rs.add_argument("--work", default=".shield")
     rs.add_argument("--execute", action="store_true", help="perform actions instead of dry-run")
     rs.set_defaults(fn=lambda a: respond_file(Path(a.findings), Path(a.work), dry_run=not a.execute))
+    au = sub.add_parser("audit", help="slow loop: crawl an archive of recordings, respond, build the dataset")
+    au.add_argument("archive")
+    au.add_argument("--work", default=".shield")
+    au.add_argument("--dataset", default="dataset")
+    au.add_argument("--fps", type=float, default=1.0)
+    au.add_argument("--no-vision", action="store_true")
+    au.add_argument("--execute", action="store_true")
+    au.set_defaults(fn=lambda a: print(json.dumps(audit(Path(a.archive), Path(a.work), Path(a.dataset), fps=a.fps,
+                                                       vision=not a.no_vision, dry_run=not a.execute), indent=1)) or 0)
     args = p.parse_args(argv)
     return args.fn(args)
 
