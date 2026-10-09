@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { findings, frameEvents, secondsOf, sevRank, toolCalls } from "@/lib/data";
+import { findings, frameEvents, reviews, secondsOf, sevRank, toolCalls } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 const sevColor: Record<string, string> = { critical: "#ff4d4f", high: "#ffb020", medium: "#ffd166", low: "#4cc9f0" };
@@ -7,7 +7,8 @@ const sevColor: Record<string, string> = { critical: "#ff4d4f", high: "#ffb020",
 export default async function RecordingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const stream = decodeURIComponent(id);
-  const [fe, fi, tc] = await Promise.all([frameEvents(stream), findings(stream), toolCalls(stream)]);
+  const [fe, fi, tc, rv] = await Promise.all([frameEvents(stream), findings(stream), toolCalls(stream), reviews(stream)]);
+  const reviewOf = (f: { frame_path: string; rule: string }) => rv.find((r) => r.frame_path === f.frame_path && r.rule === f.rule);
   const byFrame = new Map<string, typeof fi>();
   for (const f of fi) { const k = f.frame_path; byFrame.set(k, [...(byFrame.get(k) ?? []), f]); }
   const frames = [...byFrame.entries()].sort((a, b) => secondsOf(a[0]) - secondsOf(b[0]));
@@ -18,7 +19,7 @@ export default async function RecordingPage({ params }: { params: Promise<{ id: 
     <main className="mx-auto max-w-7xl px-6 py-8">
       <Link href="/" className="text-sm text-zinc-400 hover:text-zinc-200">← archive</Link>
       <h1 className="mt-2 text-2xl font-semibold">{stream}</h1>
-      <p className="text-sm text-zinc-400">{fe.length} keyframes · {fi.length} findings · worst <b style={{ color: sevColor[worst] ?? "#aaa" }}>{worst}</b> · {tc.length} agent actions</p>
+      <p className="text-sm text-zinc-400">{fe.length} keyframes · {fi.length} findings · worst <b style={{ color: sevColor[worst] ?? "#aaa" }}>{worst}</b> · {tc.length} agent actions · {rv.length} reviewed ({rv.filter((r) => r.vision_confirmed === true).length} confirmed by vision, {rv.filter((r) => r.redaction_ok === true).length} blur verified)</p>
 
       <section className="mt-6 rounded-xl border border-zinc-800 bg-zinc-900 p-4">
         <h2 className="mb-2 text-sm text-zinc-400">timeline (seconds)</h2>
@@ -40,7 +41,12 @@ export default async function RecordingPage({ params }: { params: Promise<{ id: 
               {fs.map((f, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="mt-1 inline-block h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: sevColor[f.severity] }} />
-                  <span><span className="text-zinc-400">{f.kind}</span> <b>{f.rule}</b> <code className="rounded bg-zinc-800 px-1 text-xs">{f.match.slice(0, 48)}</code><br /><span className="text-xs text-zinc-500">{f.reason} · {f.action}</span></span>
+                  <span><span className="text-zinc-400">{f.kind}</span> <b>{f.rule}</b> <code className="rounded bg-zinc-800 px-1 text-xs">{f.match.slice(0, 48)}</code><br /><span className="text-xs text-zinc-500">{f.reason} · {f.action}</span>
+                    {(() => { const r = reviewOf(f); if (!r) return null; return (
+                      <span className="ml-2 inline-flex gap-1 align-middle text-xs">
+                        {r.vision_confirmed !== null && <span className={`rounded px-1.5 py-0.5 font-semibold ${r.vision_confirmed ? "bg-emerald-500 text-black" : "bg-red-500 text-black"}`} title={r.vision_why}>{r.vision_confirmed ? "vision ✓" : "vision ✗"}</span>}
+                        {r.redaction_ok !== null && <span className={`rounded px-1.5 py-0.5 font-semibold ${r.redaction_ok ? "bg-emerald-500 text-black" : "bg-red-500 text-black"}`}>{r.redaction_ok ? "blur ✓" : "blur ✗"}</span>}
+                      </span>); })()}</span>
                 </li>
               ))}
             </ul>
