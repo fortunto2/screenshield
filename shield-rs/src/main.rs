@@ -142,7 +142,7 @@ fn scan(source: &str, work: &Path, fps: f64, min_change: u32, limit: Option<u64>
                 "box": f.r#box.as_ref().map(|b| vec![b.x, b.y, b.w, b.h]).unwrap_or_default(),
                 "action": if f.r#box.is_some() && f.kind == "leak" { "blurred" } else { "logged" }, "frame_path": frame.path.to_string_lossy()
             }));
-            println!("{}", serde_json::json!({"ts": frame.ts, "frame": frame.path, "frame_w": res.width, "frame_h": res.height, "lat_ms": tf.elapsed().as_millis() as u64, "kind": f.kind, "rule": f.rule, "severity": f.severity, "match": f.r#match, "reason": f.reason, "box": f.r#box}));
+            println!("{}", serde_json::json!({"ts": frame.ts, "frame": frame.path, "frame_w": res.width, "frame_h": res.height, "stream_id": stream_id, "room_id": room, "lat_ms": tf.elapsed().as_millis() as u64, "kind": f.kind, "rule": f.rule, "severity": f.severity, "match": f.r#match, "reason": f.reason, "box": f.r#box}));
         }
         store.insert("findings", &rows)?;
         if verbose { eprintln!("# kf {} t={:.1}s texts={} codes={} findings={} lat={}ms", frame.index, frame.ts, res.texts.len(), res.codes.len(), findings.len(), tf.elapsed().as_millis()); }
