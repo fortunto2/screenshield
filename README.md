@@ -2,6 +2,12 @@
 
 Cyberdefense Hackathon, SF Tech Week, 9 Oct 2026 (tokens& · AWS Builder Loft). Tracks: threat discovery + continuous defense.
 
+![the room](web/room.jpg)
+
+**Are you safe?** Forty laptops in this room, every screen readable by any phone camera: repos, `.env` files,
+dashboards, chats. One camera on a tripod and the whole room's secrets are on a recording. ScreenShield is what
+should sit between that camera and the recording.
+
 Every lecture hall, boardroom and webinar records a screen. Screens show API keys, passwords, grades and e-mails
 (**leaks out**). The same frames carry QR codes aimed at viewers and instruction text aimed at the AI agents that now
 watch camera feeds through MCP (**attacks in**). ScreenShield watches the stream, live and across the archive, and acts.
