@@ -84,6 +84,7 @@ fn main() -> Result<()> {
             let mut regs = Vec::new();
             for line in std::fs::read_to_string(&findings)?.lines().filter(|l| !l.trim().is_empty()) {
                 let f: serde_json::Value = serde_json::from_str(line)?;
+                if f["kind"].as_str() == Some("watch") { continue; } // code is watched, never blurred
                 if let (Some(ts), Some(b)) = (f["ts"].as_f64(), f["box"].as_object()) {
                     let k = match (f["frame_w"].as_f64(), rec_w) { (Some(fw), rw) if fw > 0.0 && rw > 0.0 => rw / fw, _ => 1.0 };
                     let g = |key: &str| b[key].as_f64().unwrap_or(0.0) * k;
