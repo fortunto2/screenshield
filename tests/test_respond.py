@@ -5,7 +5,7 @@ from screenshield.store import Store
 
 
 def make(tmp_path):
-    return Responder(Policy(org="t", approved_destinations={"live.epiphan.cloud"}), Store(tmp_path), dry_run=True)
+    return Responder(Policy(org="t", approved_destinations={"live.campus-cloud.example"}), Store(tmp_path), dry_run=True)
 
 
 def test_critical_leak_gets_redact_revoke_incident(tmp_path, monkeypatch):

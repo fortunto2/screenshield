@@ -26,7 +26,7 @@ def gen_frame_events(rooms: int = 10_000, days: int = 1, keyframe_every_s: int =
         for r in range(rooms):
             room = f"room-{r:05d}"
             site = f"site-{r % 50:02d}"
-            device = f"pearl-{r:05d}"
+            device = f"enc-{r:05d}"
             stream = f"{room}-{day0:%Y%m%d}"
             viewers = rnd.randint(5, 300)
             app = rnd.choice(APPS)
@@ -90,6 +90,6 @@ def _s(ts: datetime) -> str:
 
 def _ev(ts, org, room, app, qr, tokens, viewers, n_codes=0):
     return {"ts": _s(ts), "org_id": org, "site_id": f"site-{int(room[5:]) % 50:02d}", "room_id": room,
-            "device_id": f"pearl-{room[5:]}", "stream_id": f"{room}-{ts:%Y%m%d}", "source_kind": "screen",
+            "device_id": f"enc-{room[5:]}", "stream_id": f"{room}-{ts:%Y%m%d}", "source_kind": "screen",
             "phash": h64(room + _s(ts)), "text_density": 1500.0, "n_texts": 20, "n_codes": n_codes,
             "app_class": app, "token_hashes": tokens, "qr_payload": qr, "viewers": viewers, "embedding": []}

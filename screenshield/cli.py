@@ -75,7 +75,7 @@ def main(argv: list[str] | None = None) -> int:
     lv.add_argument("--min-change", type=int, default=6)
     lv.add_argument("--limit", type=int, default=None)
     lv.add_argument("--allow", nargs="*", help="allowed QR domains")
-    lv.add_argument("--approved", nargs="*", default=["live.epiphan.cloud"], help="approved stream destinations")
+    lv.add_argument("--approved", nargs="*", default=["live.campus-cloud.example"], help="approved stream destinations")
     lv.add_argument("--no-record", action="store_true")
     lv.add_argument("-v", "--verbose", action="store_true")
     lv.set_defaults(fn=lambda a: run_live(a.source, Path(a.work), a.room, a.org, set(a.allow or []),

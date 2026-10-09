@@ -54,4 +54,4 @@ the video itself is an attack surface. Gates in this repo follow DRIFT (Li, Xiao
 constraints, data provenance, injection isolation. Visual prompt injection against computer-use agents reaches
 100% success in VPI-Bench (ICLR 2026); the gate therefore sits outside the model.
 
-MIT. Built with Claude Code. No Epiphan code or data.
+MIT. Built with Claude Code during the event.

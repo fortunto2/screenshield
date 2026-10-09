@@ -2,7 +2,7 @@ from screenshield.guard import Guard
 
 
 def make():
-    return Guard(approved_destinations={"cdn.university.edu", "live.epiphan.cloud"})
+    return Guard(approved_destinations={"cdn.university.edu", "live.campus-cloud.example"})
 
 
 def test_read_tools_pass():
@@ -23,7 +23,7 @@ def test_unapproved_destination_needs_human_even_without_taint():
 
 
 def test_approved_destination_allowed():
-    v = make().check(0, "set_stream_destination", {"url": "srt://live.epiphan.cloud:9000?streamid=abc"})
+    v = make().check(0, "set_stream_destination", {"url": "srt://live.campus-cloud.example:9000?streamid=abc"})
     assert v.allowed
 
 
