@@ -60,6 +60,12 @@ severity and responder actions; a recording page with a findings timeline, the k
 tool calls. Reads the same three tables from JSONL (`SHIELD_WORK`, default `../.shield-archive`) or from
 ClickHouse when `CLICKHOUSE_HOST` is set.
 
+**ClickHouse, measured locally (single `clickhouse server` binary, M-series Mac):** 6.0M keyframe rows ingested at
+~115k rows/s; the three fleet queries (secret held on screen, QR campaign across rooms, frame text → tool call join)
+answer in 26–34 ms each over HTTP; `ocr_text ILIKE` grep across the 6M-row fleet in 34 ms. Flagged keyframes are
+stored in `findings.evidence_jpeg` (640px JPEG, base64) so an incident carries its own evidence; ordinary keyframes
+stay as OCR text + hashes.
+
 ```bash
 shield audit ./archive --work .shield-archive     # produce the data
 cd dashboard && pnpm install && pnpm dev            # http://localhost:3000

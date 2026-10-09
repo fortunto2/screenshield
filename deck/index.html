@@ -155,14 +155,15 @@ pre{font-family:ui-monospace,Menlo,monospace;font-size:18px;line-height:1.5;back
   <div class="row">
     <div class="card"><div class="num">57M<small>keyframe rows per day · 10k rooms · 8 h · one every 5 s</small></div></div>
     <div class="card"><div class="num">3<small>tables: frame_events · findings · tool_calls (agent log in the same DB)</small></div></div>
-    <div class="card"><div class="num">ms<small>per fleet query, the demo stories below</small></div></div>
+    <div class="card"><div class="num">26–34 ms<small>per fleet query over 6.0M rows, measured locally; ingest ~115k rows/s</small></div></div>
   </div>
   <table>
     <tr><th>Story</th><th>Query</th><th>Why only a fleet DB can answer</th></tr>
     <tr><td>Secret held on screen</td><td>min/max ts per match_hash → seconds on screen, keyframes, last action</td><td>one room is an accident; the duration and repeats decide the response</td></tr>
     <tr><td>QR campaign</td><td>uniq(room_id) per QR payload in 20 min, HAVING ≥ 3</td><td>31 rooms = attack, not a typo</td></tr>
     <tr><td>Frame text → tool call</td><td>findings ⋈ tool_calls on stream_id, t within 120 s</td><td>proves the injection: text at t, tool call with that value at t+2 s</td></tr>
-    <tr><td>Grep the archive</td><td>frame_events WHERE ocr_text ILIKE '%billing-api%'</td><td>every recording where this repo or secret was ever on screen, in ms</td></tr>
+    <tr><td>Grep the archive</td><td>frame_events WHERE ocr_text ILIKE '%billing-api%'</td><td>every recording where this repo or secret was ever on screen: 34 ms over 6M rows</td></tr>
+    <tr><td>Evidence</td><td>findings.evidence_jpeg (640px, base64) for flagged keyframes only</td><td>the incident carries its own frame; ordinary keyframes stay text + hash</td></tr>
   </table>
   <p class="sub">Text, not embeddings: every keyframe's OCR text is a row, so the agent greps the fleet like you grep a repo: "where else did this connection string, this repo name, this function show up?" Vectors only where text fails (per-room visual baselines for unknown attacks).</p>
 </section>
