@@ -98,6 +98,21 @@ pre{font-family:ui-monospace,Menlo,monospace;font-size:18px;line-height:1.5;back
 </section>
 
 <section>
+  <h2>Code on stream: watch it, do not blur it</h2>
+  <div class="row">
+    <div class="card"><h3>What happens</h3><ul>
+      <li>Developers show code on purpose: workshops, pairing, live coding. Blurring it kills the stream.</li>
+      <li>What leaks is the line inside: <code>DB_URL=postgres://user:pass@…</code>, an <code>.env</code> tab, a token in a config.</li>
+      <li>A streamer opened a text file to find a game password; the same file held a wallet seed phrase. Viewers took $60K in minutes (Aug 2023).</li></ul></div>
+    <div class="card"><h3>What ScreenShield does</h3><ul>
+      <li><b>watch</b> findings: <code>source-code</code> and <code>repo-hint</code> (github.com/org/repo in the editor title). Logged, never blurred.</li>
+      <li>Only credential lines inside the code are blurred: the secret rules work per OCR line.</li>
+      <li><b>review</b>: the agent reads the OCR'd code as data, names the language and the repo, and says whether it is safe to stream: hardcoded secret, injection, unsafe call.</li></ul></div>
+  </div>
+  <p class="sub">Demo fixture: a payments module on screen. One line blurred (the connection string), the code stays readable, the review names the language, the repo and the problem (live on AkashML: "python / github.com/acme/billing-api / hardcoded secret / critical").</p>
+</section>
+
+<section>
   <h2>Gates for any agent that watches the feed <span class="sub">(DRIFT, Li &amp; Xiao, NeurIPS 2025)</span></h2>
   <div class="row">
     <div class="card"><h3>Control constraints</h3><p>Read tools pass. Write tools are an allowlist. <code>factory_reset</code>, <code>set_admin_password</code> always need a human.</p></div>

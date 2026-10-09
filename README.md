@@ -59,6 +59,13 @@ cd dashboard && pnpm install && pnpm dev            # http://localhost:3000
 
 ![archive](web/archive-home.png)
 
+## Code on stream
+
+Code is shown on purpose, so `source-code` and `repo-hint` are **watch** findings: logged, never blurred. Only
+credential lines inside the code are blurred (the secret rules work per OCR line). `shield review` then reads the
+OCR'd code as data and says whether it is safe to stream: language, repository, hardcoded secret, injection,
+unsafe call. Fixture: `fixtures/code-on-screen.png`.
+
 ## Try it (Python reference, macOS, 2 minutes)
 
 ```bash

@@ -1,0 +1,1 @@
+{"must": ["source-code", "repo-hint", "db-connection-string"], "must_not": ["override-instructions"]}
