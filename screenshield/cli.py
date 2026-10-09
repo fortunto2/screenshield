@@ -11,6 +11,7 @@ from pathlib import Path
 
 from .detectors import detect_all
 from .frames import iter_frames
+from .live import run_live
 from .ocr import scan_images
 
 
@@ -46,6 +47,20 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--allow", nargs="*", help="allowed QR domains")
     s.add_argument("-v", "--verbose", action="store_true")
     s.set_defaults(fn=cmd_scan)
+    lv = sub.add_parser("live", help="watch screen/camera/stream, store events, record, guard")
+    lv.add_argument("source", nargs="?", default="screen")
+    lv.add_argument("--work", default=".shield")
+    lv.add_argument("--room", default="room-local")
+    lv.add_argument("--org", default="demo")
+    lv.add_argument("--fps", type=float, default=2.0)
+    lv.add_argument("--min-change", type=int, default=6)
+    lv.add_argument("--limit", type=int, default=None)
+    lv.add_argument("--allow", nargs="*", help="allowed QR domains")
+    lv.add_argument("--approved", nargs="*", default=["live.epiphan.cloud"], help="approved stream destinations")
+    lv.add_argument("--no-record", action="store_true")
+    lv.add_argument("-v", "--verbose", action="store_true")
+    lv.set_defaults(fn=lambda a: run_live(a.source, Path(a.work), a.room, a.org, set(a.allow or []),
+                                          set(a.approved), a.fps, a.min_change, a.limit, not a.no_record, a.verbose))
     args = p.parse_args(argv)
     return args.fn(args)
 

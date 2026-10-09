@@ -44,9 +44,9 @@ def hamming(a: int, b: int) -> int:
 def ffmpeg_input_args(source: str) -> list[str]:
     """Map a friendly source name to ffmpeg input args."""
     if source == "screen":
-        return ["-f", "avfoundation", "-framerate", "5", "-capture_cursor", "1", "-i", "5:none"]
+        return ["-f", "avfoundation", "-framerate", "5", "-pixel_format", "uyvy422", "-capture_cursor", "1", "-i", "5:none"]
     if source.startswith("camera:"):
-        return ["-f", "avfoundation", "-framerate", "5", "-i", f"{source.split(':', 1)[1]}:none"]
+        return ["-f", "avfoundation", "-framerate", "5", "-pixel_format", "uyvy422", "-i", f"{source.split(':', 1)[1]}:none"]
     if source.startswith(("rtmp://", "srt://", "rtsp://", "http://", "https://")):
         return ["-i", source]
     return ["-i", source]  # file
@@ -85,7 +85,7 @@ def iter_frames(source: str, out_dir: Path, fps: float = 2.0, min_change: int = 
         proc.kill()
 
 
-def _split_pngs(stream) -> Iterator["io.BytesIO"]:
+def _split_pngs(stream) -> Iterator[io.BytesIO]:
     """Split a concatenated PNG byte stream on the IEND chunk."""
     import io
 
