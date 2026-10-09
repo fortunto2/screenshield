@@ -35,7 +35,8 @@ shield scan fixtures/lecture-7s.mp4             # findings, 2 keyframes, < 1 s
 shield scan screen --record -v                  # fast loop on your screen, parallel recording
 shield scan "cam:MacBook Pro Camera" --limit 5  # any avfoundation device by name
 shield redact in.mp4 findings.jsonl out.mp4     # blur every finding box
-shield respond findings.jsonl                   # responder agent (sgr-agent tool calling on AkashML, rules offline)
+shield respond findings.jsonl                   # responder agent: sgr-agent tool calling on any OpenAI-compatible
+                                                #   endpoint (AKASHML_API_KEY/BASE_URL/MODEL), rule-based planner offline
 shield audit ./recordings                       # slow loop → dataset/ + report.json
 shield eval fixtures                            # catch rate over fixtures
 ```
