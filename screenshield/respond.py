@@ -97,12 +97,13 @@ class Responder:
         box = f.get("box") or [0, 0, 0, 0]
         acts: list[tuple[str, dict]] = []
         hold = max(1.0, f.get("dur", 1.0))
+        t0 = _t(f)
         if kind == "leak" and sev in {"critical", "high"}:
-            acts.append(("redact_segment", {"stream_id": sid, "t_from": f["ts"], "t_to": f["ts"] + hold, "box": box}))
+            acts.append(("redact_segment", {"stream_id": sid, "t_from": t0, "t_to": t0 + hold, "box": box}))
             if sev == "critical":
                 acts.append(("revoke_credential", {"rule": f["rule"], "match_hash": str(f.get("match_hash", ""))}))
         if kind == "quishing" and sev == "high":
-            acts.append(("redact_segment", {"stream_id": sid, "t_from": f["ts"], "t_to": f["ts"] + hold, "box": box}))
+            acts.append(("redact_segment", {"stream_id": sid, "t_from": t0, "t_to": t0 + hold, "box": box}))
             host = _host(f["match"])
             acts.append(("block_destination", {"host": host, "reason": f["reason"]}))
         if kind == "injection":
@@ -152,7 +153,7 @@ class Responder:
     def respond(self, f: dict, facts: dict | None = None) -> list[Action]:
         facts = facts or {}
         plan = self.plan_llm(f, facts) if os.environ.get("AKASHML_API_KEY") else self.plan_rules(f, facts)
-        return [self.execute(f.get("ts", 0.0), tool, args) for tool, args in plan]
+        return [self.execute(_t(f), tool, args) for tool, args in plan]
 
 
 def fleet_facts(store: Store, f: dict) -> dict:
@@ -161,6 +162,18 @@ def fleet_facts(store: Store, f: dict) -> dict:
         return {}
     _, rows = store.query(f"SELECT uniq(room_id) FROM findings WHERE match_hash = {int(f['match_hash'])}")
     return {"rooms_with_same_match": rows[0][0]}
+
+
+def _t(f: dict) -> float:
+    """Seconds into the recording: numeric ts from `scan`, else parsed from the keyframe filename."""
+    ts = f.get("ts")
+    if isinstance(ts, (int, float)):
+        return float(ts)
+    name = Path(f.get("frame_path", "")).stem  # f000007_00003.00
+    try:
+        return float(name.split("_", 1)[1])
+    except (IndexError, ValueError):
+        return 0.0
 
 
 def _host(url: str) -> str:

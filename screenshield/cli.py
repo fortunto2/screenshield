@@ -40,7 +40,21 @@ def cmd_scan(args: argparse.Namespace) -> int:
     return 0
 
 
+def load_env(path: Path = Path(".env")) -> None:
+    """Minimal .env loader: KEY=VALUE lines, no quotes handling beyond stripping."""
+    if not path.exists():
+        return
+    import os
+
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+
 def main(argv: list[str] | None = None) -> int:
+    load_env()
     p = argparse.ArgumentParser(prog="shield", description="DLP for video: leaks out, attacks in.")
     sub = p.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("scan", help="scan a video file, 'screen', 'camera:<idx>' or a stream url")
