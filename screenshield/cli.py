@@ -16,6 +16,7 @@ from .frames import iter_frames
 from .ingest import ingest_synth
 from .live import run_live
 from .ocr import scan_images
+from .respond import respond_file
 from .store import Store
 
 
@@ -79,6 +80,11 @@ def main(argv: list[str] | None = None) -> int:
     ig.add_argument("--days", type=int, default=1)
     ig.add_argument("--max-rows", type=int, default=None)
     ig.set_defaults(fn=lambda a: ingest_synth(Store(Path(a.work)), a.rooms, a.days, max_rows=a.max_rows) and 0)
+    rs = sub.add_parser("respond", help="run the responder agent over a findings.jsonl (dry-run by default)")
+    rs.add_argument("findings")
+    rs.add_argument("--work", default=".shield")
+    rs.add_argument("--execute", action="store_true", help="perform actions instead of dry-run")
+    rs.set_defaults(fn=lambda a: respond_file(Path(a.findings), Path(a.work), dry_run=not a.execute))
     args = p.parse_args(argv)
     return args.fn(args)
 
