@@ -30,12 +30,33 @@ pub fn hamming(a: u64, b: u64) -> u32 { (a ^ b).count_ones() }
 pub fn input_args(source: &str) -> Vec<String> {
     let s = |v: &[&str]| v.iter().map(|x| x.to_string()).collect::<Vec<_>>();
     if source == "screen" {
-        return s(&["-f", "avfoundation", "-framerate", "5", "-pixel_format", "uyvy422", "-capture_cursor", "1", "-i", "5:none"]);
+        let idx = avf_index("Capture screen").unwrap_or(5);
+        return s(&["-f", "avfoundation", "-framerate", "5", "-pixel_format", "uyvy422", "-capture_cursor", "1", "-i", &format!("{idx}:none")]);
+    }
+    if let Some(name) = source.strip_prefix("cam:") {
+        let idx = avf_index(name).unwrap_or(0);
+        return s(&["-f", "avfoundation", "-framerate", "30", "-pixel_format", "uyvy422", "-i", &format!("{idx}:none")]);
     }
     if let Some(idx) = source.strip_prefix("camera:") {
-        return s(&["-f", "avfoundation", "-framerate", "5", "-pixel_format", "uyvy422", "-i", &format!("{idx}:none")]);
+        return s(&["-f", "avfoundation", "-framerate", "30", "-pixel_format", "uyvy422", "-i", &format!("{idx}:none")]);
     }
     s(&["-i", source])
+}
+
+/// Index of the first avfoundation video device whose name contains `needle` (devices shift when a phone or
+/// camera is plugged in, so never hardcode).
+pub fn avf_index(needle: &str) -> Option<u32> {
+    let out = Command::new("ffmpeg").args(["-hide_banner", "-f", "avfoundation", "-list_devices", "true", "-i", ""]).output().ok()?;
+    let text = String::from_utf8_lossy(&out.stderr);
+    let mut in_video = false;
+    for line in text.lines() {
+        if line.contains("video devices") { in_video = true; continue; }
+        if line.contains("audio devices") { break; }
+        if in_video && line.contains(needle) {
+            if let (Some(a), Some(b)) = (line.rfind('['), line.rfind(']')) { return line[a + 1..b].parse().ok(); }
+        }
+    }
+    None
 }
 
 fn is_image(source: &str) -> bool {

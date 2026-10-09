@@ -1,7 +1,12 @@
+mod audit;
 mod detect;
+mod evalrun;
 mod frames;
 mod guard;
 mod ocr;
+mod policy;
+mod redact;
+mod respond;
 mod store;
 
 use anyhow::Result;
@@ -29,12 +34,51 @@ enum Cmd {
         #[arg(long, default_value = "room-local")] room: String,
         #[arg(short, long)] verbose: bool,
     },
+    /// Run the responder agent over a findings.jsonl (dry-run by default)
+    Respond { findings: PathBuf, #[arg(long, default_value = ".shield")] work: PathBuf, #[arg(long)] execute: bool },
+    /// Slow loop: crawl an archive of recordings, respond, build the dataset the fast loop learns from
+    Audit { archive: PathBuf, #[arg(long, default_value = ".shield")] work: PathBuf, #[arg(long, default_value = "dataset")] dataset: PathBuf, #[arg(long, default_value_t = 1.0)] fps: f64, #[arg(long, default_value_t = 8)] min_change: u32, #[arg(long)] execute: bool },
+    /// Run OCR + detectors over a fixtures dir and report the catch rate
+    Eval { #[arg(default_value = "fixtures")] fixtures: PathBuf, #[arg(long)] allow: Vec<String> },
+    /// Blur every finding box from a scan output into a new recording
+    Redact { src: PathBuf, findings: PathBuf, dst: PathBuf, #[arg(long, default_value_t = 4.0)] hold: f64 },
 }
 
 fn main() -> Result<()> {
     load_env();
     match Cli::parse().cmd {
         Cmd::Scan { source, work, fps, min_change, limit, allow, room, verbose } => scan(&source, &work, fps, min_change, limit, &allow, &room, verbose),
+        Cmd::Respond { findings, work, execute } => {
+            let store = store::Store::new(&work)?;
+            let mut r = respond::Responder::new(policy::Policy::load(), !execute);
+            eprintln!("# responder planner={} policy={} store={}", r.planner(), r.policy.source, store.backend());
+            for line in std::fs::read_to_string(&findings)?.lines().filter(|l| !l.trim().is_empty()) {
+                let f: serde_json::Value = serde_json::from_str(line)?;
+                let acts = r.respond(&f, &serde_json::json!({}), &store);
+                println!("{}", serde_json::json!({"finding": format!("{}/{}", f["kind"].as_str().unwrap_or(""), f["rule"].as_str().unwrap_or("")), "actions": acts.iter().map(|a| format!("{}:{}", a.tool, a.verdict)).collect::<Vec<_>>()}));
+            }
+            Ok(())
+        }
+        Cmd::Audit { archive, work, dataset, fps, min_change, execute } => {
+            let store = store::Store::new(&work)?;
+            let mut r = respond::Responder::new(policy::Policy::load(), !execute);
+            let rep = audit::run(&archive, &work, &dataset, fps, min_change, &mut r, &store)?;
+            println!("{}", serde_json::to_string_pretty(&rep)?);
+            Ok(())
+        }
+        Cmd::Eval { fixtures, allow } => { println!("{}", serde_json::to_string_pretty(&evalrun::run(&fixtures, &allow)?)?); Ok(()) }
+        Cmd::Redact { src, findings, dst, hold } => {
+            let mut regs = Vec::new();
+            for line in std::fs::read_to_string(&findings)?.lines().filter(|l| !l.trim().is_empty()) {
+                let f: serde_json::Value = serde_json::from_str(line)?;
+                if let (Some(ts), Some(b)) = (f["ts"].as_f64(), f["box"].as_object()) {
+                    regs.push(redact::Region { t_from: ts, t_to: ts + hold, x: b["x"].as_f64().unwrap_or(0.0), y: b["y"].as_f64().unwrap_or(0.0), w: b["w"].as_f64().unwrap_or(0.0), h: b["h"].as_f64().unwrap_or(0.0) });
+                }
+            }
+            redact::redact(&src, &dst, &regs)?;
+            eprintln!("# redacted {} regions -> {}", regs.len(), dst.display());
+            Ok(())
+        }
     }
 }
 

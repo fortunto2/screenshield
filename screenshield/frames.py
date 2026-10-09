@@ -41,12 +41,33 @@ def hamming(a: int, b: int) -> int:
     return (a ^ b).bit_count()
 
 
+def avf_index(needle: str) -> int | None:
+    """Index of the first avfoundation video device whose name contains `needle` (indices shift when a
+    phone or camera is plugged in, so never hardcode)."""
+    out = subprocess.run(["ffmpeg", "-hide_banner", "-f", "avfoundation", "-list_devices", "true", "-i", ""],
+                         capture_output=True, text=True)
+    in_video = False
+    for line in out.stderr.splitlines():
+        if "video devices" in line:
+            in_video = True
+            continue
+        if "audio devices" in line:
+            break
+        if in_video and needle in line:
+            return int(line[line.rfind("[") + 1:line.rfind("]")])
+    return None
+
+
 def ffmpeg_input_args(source: str) -> list[str]:
     """Map a friendly source name to ffmpeg input args."""
     if source == "screen":
-        return ["-f", "avfoundation", "-framerate", "5", "-pixel_format", "uyvy422", "-capture_cursor", "1", "-i", "5:none"]
+        idx = avf_index("Capture screen") or 5
+        return ["-f", "avfoundation", "-framerate", "5", "-pixel_format", "uyvy422", "-capture_cursor", "1", "-i", f"{idx}:none"]
+    if source.startswith("cam:"):
+        idx = avf_index(source[4:]) or 0
+        return ["-f", "avfoundation", "-framerate", "30", "-pixel_format", "uyvy422", "-i", f"{idx}:none"]
     if source.startswith("camera:"):
-        return ["-f", "avfoundation", "-framerate", "5", "-pixel_format", "uyvy422", "-i", f"{source.split(':', 1)[1]}:none"]
+        return ["-f", "avfoundation", "-framerate", "30", "-pixel_format", "uyvy422", "-i", f"{source.split(':', 1)[1]}:none"]
     if source.startswith(("rtmp://", "srt://", "rtsp://", "http://", "https://")):
         return ["-i", source]
     return ["-i", source]  # file
