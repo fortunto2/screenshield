@@ -134,7 +134,7 @@ fn scan(source: &str, work: &Path, fps: f64, min_change: u32, limit: Option<u64>
             "stream_id": stream_id, "source_kind": if source == "screen" { "screen" } else { "camera" },
             "phash": frame.dhash, "text_density": (joined.join("").len() as f64 / mpx).round(), "n_texts": res.texts.len(),
             "n_codes": res.codes.len(), "app_class": "unknown", "token_hashes": [], "qr_payload": res.codes.first().map(|c| c.payload.clone()).unwrap_or_default(),
-            "viewers": 1, "embedding": []
+            "viewers": 1, "embedding": [], "ocr_text": joined.join("\n").chars().take(4000).collect::<String>(), "frame_path": frame.path
         })])?;
         let mut rows = Vec::new();
         for f in &findings {
