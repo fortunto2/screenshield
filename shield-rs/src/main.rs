@@ -50,9 +50,9 @@ fn main() -> Result<()> {
     load_env();
     match Cli::parse().cmd {
         Cmd::Scan { source, work, fps, min_change, limit, allow, room, record, verbose } => {
-            let mut rec = if record { Some(start_recording(&source, &work)?) } else { None };
-            let r = scan(&source, &work, fps, min_change, limit, &allow, &room, verbose);
-            if let Some(mut c) = rec.take() { use std::io::Write; if let Some(si) = c.stdin.as_mut() { let _ = si.write_all(b"q"); } let _ = c.wait(); eprintln!("# recording saved to {}", work.join("recording.mp4").display()); }
+            let rec = if record { Some(work.join("recording.mp4")) } else { None };
+            let r = scan(&source, &work, fps, min_change, limit, &allow, &room, rec.as_deref(), verbose);
+            if let Some(p) = rec { eprintln!("# recording saved to {}", p.display()); }
             r
         }
         Cmd::Respond { findings, work, execute } => {
@@ -89,15 +89,6 @@ fn main() -> Result<()> {
     }
 }
 
-fn start_recording(source: &str, work: &Path) -> Result<std::process::Child> {
-    std::fs::create_dir_all(work)?;
-    let mut cmd = std::process::Command::new("ffmpeg");
-    cmd.args(["-hide_banner", "-loglevel", "error", "-y"]).args(frames::input_args(source))
-        .args(["-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", "-g", "25"]).arg(work.join("recording.mp4"))
-        .stdin(std::process::Stdio::piped());
-    Ok(cmd.spawn()?)
-}
-
 fn load_env() {
     for p in [".env", "../.env", "app/.env"] {
         if let Ok(s) = std::fs::read_to_string(p) {
@@ -114,13 +105,13 @@ fn load_env() {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn scan(source: &str, work: &Path, fps: f64, min_change: u32, limit: Option<u64>, allow: &[String], room: &str, verbose: bool) -> Result<()> {
+fn scan(source: &str, work: &Path, fps: f64, min_change: u32, limit: Option<u64>, allow: &[String], room: &str, record: Option<&Path>, verbose: bool) -> Result<()> {
     let store = store::Store::new(work)?;
     let mut guard = guard::Guard::new(vec![]);
     let t0 = Instant::now();
     let (mut n_frames, mut n_findings) = (0u64, 0u64);
     let stream_id = format!("{room}-{}", chrono::Utc::now().format("%Y%m%d%H%M%S"));
-    for frame in frames::FrameIter::open(source, &work.join("frames"), fps, min_change, limit)? {
+    for frame in frames::FrameIter::open(source, &work.join("frames"), fps, min_change, limit, record)? {
         let tf = Instant::now();
         n_frames += 1;
         let res = ocr::scan_images(&[&frame.path])?.remove(0);

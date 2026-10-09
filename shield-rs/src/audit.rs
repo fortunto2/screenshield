@@ -17,11 +17,20 @@ pub fn run(archive: &Path, work: &Path, dataset: &Path, fps: f64, min_change: u3
     for rec in files {
         recs += 1;
         let stream_id = rec.file_stem().unwrap().to_string_lossy().to_string();
-        for frame in frames::FrameIter::open(&rec.to_string_lossy(), &work.join("frames").join(&stream_id), fps, min_change, None)? {
+        for frame in frames::FrameIter::open(&rec.to_string_lossy(), &work.join("frames").join(&stream_id), fps, min_change, None, None)? {
             kfs += 1;
             let res = ocr::scan_images(&[&frame.path])?.remove(0);
             let findings = detect::detect_all(&res.texts, &res.codes, &responder.policy.allowed_qr_domains);
             let labels: Vec<String> = findings.iter().map(|f| f.rule.to_string()).collect();
+            let room = stream_id.split('-').next().unwrap_or("room").to_string();
+            let joined: String = res.texts.iter().map(|t| t.text.as_str()).collect::<Vec<_>>().join(" ");
+            store.insert("frame_events", &[json!({"ts": crate::store::now_iso(), "org_id": responder.policy.org, "site_id": "archive", "room_id": room, "device_id": "archive",
+                "stream_id": stream_id, "source_kind": "archive", "phash": frame.dhash, "text_density": joined.len(), "n_texts": res.texts.len(), "n_codes": res.codes.len(),
+                "app_class": "unknown", "token_hashes": [], "qr_payload": res.codes.first().map(|c| c.payload.clone()).unwrap_or_default(), "viewers": 0, "embedding": []})])?;
+            let rows: Vec<serde_json::Value> = findings.iter().map(|f| json!({"ts": crate::store::now_iso(), "org_id": responder.policy.org, "room_id": room, "stream_id": stream_id,
+                "kind": f.kind, "rule": f.rule, "severity": f.severity, "match_hash": 0, "match": if f.kind == "leak" { mask(&f.r#match) } else { f.r#match.clone() }, "reason": f.reason,
+                "box": f.r#box.as_ref().map(|b| vec![b.x, b.y, b.w, b.h]).unwrap_or_default(), "action": if f.r#box.is_some() && f.kind == "leak" { "blurred" } else { "logged" }, "frame_path": frame.path})).collect();
+            store.insert("findings", &rows)?;
             for f in &findings {
                 finds += 1;
                 let row = json!({"ts": frame.ts, "stream_id": stream_id, "room_id": stream_id.split('-').next().unwrap_or("room"), "frame_path": frame.path,
@@ -42,6 +51,8 @@ pub fn run(archive: &Path, work: &Path, dataset: &Path, fps: f64, min_change: u3
     std::fs::write(dataset.join("report.json"), serde_json::to_string_pretty(&report)?)?;
     Ok(report)
 }
+
+fn mask(s: &str) -> String { if s.len() > 8 { format!("{}{}", &s[..4], "*".repeat(s.len() - 4)) } else { "*".repeat(s.len()) } }
 
 fn walk(dir: &Path) -> Vec<std::path::PathBuf> {
     let mut out = Vec::new();

@@ -1,0 +1,6 @@
+objc[85247]: class `NSKVONotifying_AVCaptureScreenInput' not linked into application
+objc[85247]: class `NSKVONotifying_AVCaptureScreenInput' not linked into application
+objc[85247]: class `NSKVONotifying_AVCaptureScreenInput' not linked into application
+objc[85292]: class `NSKVONotifying_AVCaptureScreenInput' not linked into application
+objc[85292]: class `NSKVONotifying_AVCaptureScreenInput' not linked into application
+objc[85292]: class `NSKVONotifying_AVCaptureScreenInput' not linked into application
