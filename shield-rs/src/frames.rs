@@ -86,7 +86,10 @@ impl FrameIter {
         let mut cmd = Command::new("ffmpeg");
         cmd.args(["-hide_banner", "-loglevel", "error", "-y"]).args(input_args(source));
         if let Some(rec) = record {
-            cmd.args(["-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", "-g", "25", "-movflags", "+frag_keyframe+empty_moov"]).arg(rec);
+            // keyframe every second and 1 s fragments: a recording stopped early is still playable; Retina screens are
+            // scaled to 1080p for the encoder (the analysis path keeps full resolution)
+            cmd.args(["-vf", "scale='min(1920,iw)':-2", "-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", "-g", "5",
+                      "-movflags", "+frag_keyframe+empty_moov+default_base_moof", "-frag_duration", "1000000"]).arg(rec);
         }
         if !is_image(source) { cmd.args(["-vf", &format!("fps={fps}")]); }
         cmd.args(["-f", "image2pipe", "-vcodec", "png", "-"]).stdout(Stdio::piped()).stdin(Stdio::piped());
@@ -140,7 +143,7 @@ impl FrameIter {
     pub fn stop(&mut self) {
         use std::io::Write;
         if let Some(mut si) = self.child.stdin.take() { let _ = si.write_all(b"q"); let _ = si.flush(); }
-        for _ in 0..30 {
+        for _ in 0..100 {
             if let Ok(Some(_)) = self.child.try_wait() { return; }
             std::thread::sleep(std::time::Duration::from_millis(100));
         }

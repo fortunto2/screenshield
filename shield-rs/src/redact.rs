@@ -23,6 +23,11 @@ pub fn build_filter(regions: &[Region]) -> (String, String) {
     (parts.join(";"), prev)
 }
 
+pub fn video_width(src: &Path) -> Option<f64> {
+    let out = Command::new("ffprobe").args(["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width", "-of", "csv=p=0"]).arg(src).output().ok()?;
+    String::from_utf8_lossy(&out.stdout).trim().parse().ok()
+}
+
 pub fn redact(src: &Path, dst: &Path, regions: &[Region]) -> Result<()> {
     anyhow::ensure!(!regions.is_empty(), "no regions");
     let (graph, last) = build_filter(regions);
