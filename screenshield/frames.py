@@ -65,7 +65,7 @@ def ffmpeg_input_args(source: str) -> list[str]:
         return ["-f", "avfoundation", "-framerate", "5", "-pixel_format", "uyvy422", "-capture_cursor", "1", "-i", f"{idx}:none"]
     if source.startswith("cam:"):
         idx = avf_index(source[4:]) or 0
-        return ["-f", "avfoundation", "-framerate", "30", "-pixel_format", "uyvy422", "-i", f"{idx}:none"]
+        return ["-f", "avfoundation", "-framerate", "30", "-pixel_format", "nv12", "-video_size", "1280x720", "-i", f"{idx}:none"]
     if source.startswith("camera:"):
         return ["-f", "avfoundation", "-framerate", "30", "-pixel_format", "uyvy422", "-i", f"{source.split(':', 1)[1]}:none"]
     if source.startswith(("rtmp://", "srt://", "rtsp://", "http://", "https://")):

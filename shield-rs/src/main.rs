@@ -86,8 +86,10 @@ fn main() -> Result<()> {
                     regs.push(redact::Region { t_from: ts, t_to: ts + hold, x: g("x"), y: g("y"), w: g("w"), h: g("h") });
                 }
             }
+            let n = regs.len();
+            let regs = redact::merge_regions(regs);
             redact::redact(&src, &dst, &regs)?;
-            eprintln!("# redacted {} regions -> {}", regs.len(), dst.display());
+            eprintln!("# redacted {} regions (merged from {}) -> {}", regs.len(), n, dst.display());
             Ok(())
         }
     }
