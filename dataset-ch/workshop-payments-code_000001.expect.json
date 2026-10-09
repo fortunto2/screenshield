@@ -1,0 +1,10 @@
+{
+  "must": [
+    "db-connection-string",
+    "repo-hint",
+    "source-code"
+  ],
+  "must_not": [],
+  "source": "workshop-payments-code.mp4",
+  "t": 0.0
+}

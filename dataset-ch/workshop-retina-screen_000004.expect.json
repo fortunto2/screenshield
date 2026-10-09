@@ -1,0 +1,13 @@
+{
+  "must": [
+    "aws-access-key",
+    "db-connection-string",
+    "device-control-verbs",
+    "email",
+    "env-secret",
+    "override-instructions"
+  ],
+  "must_not": [],
+  "source": "workshop-retina-screen.mp4",
+  "t": 3.0
+}

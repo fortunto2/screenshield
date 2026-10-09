@@ -138,6 +138,7 @@ fn scan(source: &str, work: &Path, fps: f64, min_change: u32, limit: Option<u64>
             "viewers": 1, "embedding": [], "ocr_text": joined.join("\n").chars().take(4000).collect::<String>(), "frame_path": frame.path
         })])?;
         let mut rows = Vec::new();
+        let evidence = if findings.is_empty() { String::new() } else { store::evidence_jpeg_b64(&frame.path) };
         for f in &findings {
             n_findings += 1;
             let masked = if f.kind == "leak" { mask(&f.r#match) } else { f.r#match.clone() };
@@ -145,7 +146,8 @@ fn scan(source: &str, work: &Path, fps: f64, min_change: u32, limit: Option<u64>
                 "ts": store::now_iso(), "org_id": "demo", "room_id": room, "stream_id": stream_id, "kind": f.kind, "rule": f.rule,
                 "severity": f.severity, "match_hash": 0, "match": masked, "reason": f.reason,
                 "box": f.r#box.as_ref().map(|b| vec![b.x, b.y, b.w, b.h]).unwrap_or_default(),
-                "action": if f.r#box.is_some() && f.kind == "leak" { "blurred" } else { "logged" }, "frame_path": frame.path.to_string_lossy()
+                "action": if f.r#box.is_some() && f.kind == "leak" { "blurred" } else { "logged" }, "frame_path": frame.path.to_string_lossy(),
+                "evidence_jpeg": evidence
             }));
             println!("{}", serde_json::json!({"ts": frame.ts, "frame": frame.path, "frame_w": res.width, "frame_h": res.height, "stream_id": stream_id, "room_id": room, "lat_ms": tf.elapsed().as_millis() as u64, "kind": f.kind, "rule": f.rule, "severity": f.severity, "match": f.r#match, "reason": f.reason, "box": f.r#box}));
         }

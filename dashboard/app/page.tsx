@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { recordings, stats } from "@/lib/data";
+import { recordings, stats, stories } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 const sevClass: Record<string, string> = {
@@ -8,7 +8,7 @@ const sevClass: Record<string, string> = {
 };
 
 export default async function Home() {
-  const [s, recs] = await Promise.all([stats(), recordings()]);
+  const [s, recs, st] = await Promise.all([stats(), recordings(), stories()]);
   const tiles: [string, string | number][] = [
     ["recordings", s.recordings], ["keyframes", s.frame_events], ["findings", s.findings],
     ["agent actions", s.actions], ["blocked / human", `${s.blocked} / ${s.needs_human}`], ["store", s.backend],
@@ -45,12 +45,24 @@ export default async function Home() {
                 <td className="p-3">{r.findings}<span className="ml-2 text-xs text-zinc-500">{Object.entries(r.byKind).map(([k, n]) => `${k} ${n}`).join(" · ")}</span></td>
                 <td className="p-3"><span className={`rounded px-2 py-0.5 text-xs font-semibold ${sevClass[r.worst]}`}>{r.worst}</span></td>
                 <td className="p-3">{r.actions}{r.blocked ? <span className="ml-2 text-xs text-red-400">{r.blocked} blocked</span> : null}</td>
-                <td className="p-3">{r.firstFrame ? <img alt="" className="h-12 rounded border border-zinc-700" src={`/api/frame?p=${encodeURIComponent(r.firstFrame)}`} /> : <span className="text-zinc-600">clean</span>}</td>
+                <td className="p-3">{r.evidence ? <img alt="" className="h-12 rounded border border-zinc-700" src={`data:image/jpeg;base64,${r.evidence}`} /> : r.firstFrame ? <img alt="" className="h-12 rounded border border-zinc-700" src={`/api/frame?p=${encodeURIComponent(r.firstFrame)}`} /> : <span className="text-zinc-600">clean</span>}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </section>
+      {st.length > 0 && (
+        <section className="mt-8 grid gap-4 md:grid-cols-3">
+          {st.map((x) => (
+            <div key={x.title} className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+              <h3 className="text-sm text-zinc-300">{x.title} <span className="ml-1 font-mono text-emerald-400">{x.ms} ms</span></h3>
+              <table className="mt-2 w-full text-xs"><tbody>
+                {x.rows.map((r, i) => (<tr key={i} className="border-t border-zinc-800">{Object.values(r).map((v, j) => <td key={j} className="px-1 py-1">{String(v).slice(0, 40)}</td>)}</tr>))}
+              </tbody></table>
+            </div>
+          ))}
+        </section>
+      )}
       <p className="mt-6 text-xs text-zinc-500">Fast loop writes frame_events and findings; the responder writes tool_calls. Thumbnails are unredacted keyframes and stay local.</p>
     </main>
   );

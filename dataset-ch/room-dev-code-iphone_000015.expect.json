@@ -1,0 +1,11 @@
+{
+  "must": [
+    "aws-access-key",
+    "db-connection-string",
+    "env-secret",
+    "source-code"
+  ],
+  "must_not": [],
+  "source": "room-dev-code-iphone.mp4",
+  "t": 14.0
+}

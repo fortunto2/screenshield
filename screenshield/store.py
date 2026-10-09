@@ -31,8 +31,25 @@ CREATE TABLE IF NOT EXISTS frame_events (
   token_hashes  Array(UInt64),            -- hashed OCR tokens (privacy: no raw text at fleet scale)
   qr_payload    String,
   viewers       UInt32,
-  embedding     Array(Float32)            -- only for flagged frames, else []
+  embedding     Array(Float32),           -- only for flagged frames, else []
+  ocr_text      String DEFAULT '',        -- text per keyframe: the agent greps the fleet
+  frame_path    String DEFAULT ''
 ) ENGINE = MergeTree ORDER BY (org_id, room_id, ts)""",
+    "reviews": """
+CREATE TABLE IF NOT EXISTS reviews (
+  ts               DateTime64(3),
+  org_id           LowCardinality(String),
+  stream_id        String,
+  rule             LowCardinality(String),
+  kind             LowCardinality(String),
+  frame_path       String,
+  match_hash       UInt64,
+  vision_confirmed Nullable(UInt8),
+  vision_why       String,
+  redaction_ok     Nullable(UInt8),
+  code             String DEFAULT '',
+  reviewer         LowCardinality(String)
+) ENGINE = MergeTree ORDER BY (org_id, stream_id, ts)""",
     "findings": """
 CREATE TABLE IF NOT EXISTS findings (
   ts        DateTime64(3),
@@ -47,7 +64,8 @@ CREATE TABLE IF NOT EXISTS findings (
   reason    String,
   box       Array(Float32),
   action    LowCardinality(String),   -- none | blurred | blocked | revoked | escalated
-  frame_path String
+  frame_path String,
+  evidence_jpeg String DEFAULT ''     -- base64 JPEG of the flagged keyframe: the incident carries its own evidence
 ) ENGINE = MergeTree ORDER BY (org_id, kind, ts)""",
     "tool_calls": """
 CREATE TABLE IF NOT EXISTS tool_calls (
@@ -84,6 +102,7 @@ class Store:
                 username=os.environ.get("CLICKHOUSE_USER", "default"),
                 password=os.environ.get("CLICKHOUSE_PASSWORD", ""),
                 secure=os.environ.get("CLICKHOUSE_SECURE", "1") == "1",
+                settings={"input_format_skip_unknown_fields": 1},
             )
             for ddl in DDL.values():
                 self.ch.command(ddl)

@@ -11,3 +11,4 @@ shield-rs/.shield*/
 shield-rs/target/
 archive/
 dataset-archive/
+.ch/

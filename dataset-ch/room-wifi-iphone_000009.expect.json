@@ -1,0 +1,8 @@
+{
+  "must": [
+    "password-assignment"
+  ],
+  "must_not": [],
+  "source": "room-wifi-iphone.mp4",
+  "t": 8.0
+}

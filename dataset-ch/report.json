@@ -1,0 +1,10 @@
+{
+  "actions": 98,
+  "dataset_items": 24,
+  "findings": 55,
+  "keyframes": 45,
+  "policy": "file:policy.json",
+  "recordings": 6,
+  "seconds": 284.5,
+  "store": "clickhouse"
+}

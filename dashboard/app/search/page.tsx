@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { frameEvents, secondsOf } from "@/lib/data";
+import { searchFrames, secondsOf } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
@@ -8,10 +8,8 @@ export const dynamic = "force-dynamic";
 export default async function Search({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q = "" } = await searchParams;
   const needle = q.trim().toLowerCase();
-  const all = await frameEvents();
-  const hits = needle
-    ? all.filter((e) => ((e as unknown as { ocr_text?: string }).ocr_text ?? "").toLowerCase().includes(needle))
-    : [];
+  const res = needle ? await searchFrames(q.trim()) : { rows: [], ms: 0, total: 0 };
+  const hits = res.rows;
   const byStream = new Map<string, typeof hits>();
   for (const h of hits) byStream.set(h.stream_id, [...(byStream.get(h.stream_id) ?? []), h]);
   return (
@@ -22,7 +20,7 @@ export default async function Search({ searchParams }: { searchParams: Promise<{
         <input name="q" defaultValue={q} placeholder="repo name, connection string, function, anything that was on a screen" className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-zinc-100 outline-none focus:border-sky-400" />
         <button className="rounded-lg bg-sky-400 px-4 py-2 font-semibold text-black" type="submit">search</button>
       </form>
-      {needle && <p className="mt-4 text-sm text-zinc-400">{hits.length} keyframes in {byStream.size} recordings contain <code className="rounded bg-zinc-800 px-1">{q}</code></p>}
+      {needle && <p className="mt-4 text-sm text-zinc-400">{res.total} keyframes in {byStream.size}+ recordings contain <code className="rounded bg-zinc-800 px-1">{q}</code> <span className="text-emerald-400">· {res.ms} ms</span></p>}
       <section className="mt-6 space-y-4">
         {[...byStream.entries()].map(([sid, es]) => (
           <div key={sid} className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">

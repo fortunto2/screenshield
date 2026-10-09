@@ -35,7 +35,7 @@ export default async function RecordingPage({ params }: { params: Promise<{ id: 
       <section className="mt-6 grid gap-4 md:grid-cols-2">
         {frames.map(([fp, fs]) => (
           <div key={fp} className="rounded-xl border border-zinc-800 bg-zinc-900 p-3">
-            <img alt="" className="w-full rounded border border-zinc-800" src={`/api/frame?p=${encodeURIComponent(fp)}`} />
+            <img alt="" className="w-full rounded border border-zinc-800" src={fs[0].evidence_jpeg ? `data:image/jpeg;base64,${fs[0].evidence_jpeg}` : `/api/frame?p=${encodeURIComponent(fp)}`} />
             <div className="mt-2 text-xs text-zinc-500">t = {secondsOf(fp).toFixed(1)} s</div>
             <ul className="mt-1 space-y-1 text-sm">
               {fs.map((f, i) => (

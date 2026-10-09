@@ -1,0 +1,46 @@
+# kf 1 t=0.0s texts=0 codes=0 findings=0 lat=208ms
+# kf 2 t=0.5s texts=13 codes=0 findings=0 lat=244ms
+# kf 3 t=1.0s texts=4 codes=0 findings=0 lat=237ms
+# kf 4 t=1.5s texts=1 codes=0 findings=0 lat=250ms
+# kf 5 t=2.0s texts=18 codes=0 findings=0 lat=446ms
+# kf 6 t=2.5s texts=44 codes=0 findings=0 lat=426ms
+# kf 7 t=3.0s texts=42 codes=0 findings=0 lat=358ms
+# kf 8 t=3.5s texts=36 codes=0 findings=0 lat=347ms
+# kf 9 t=4.0s texts=28 codes=0 findings=0 lat=284ms
+# kf 10 t=4.5s texts=24 codes=0 findings=0 lat=276ms
+# kf 11 t=5.0s texts=0 codes=0 findings=0 lat=284ms
+# kf 12 t=5.5s texts=0 codes=0 findings=0 lat=397ms
+# kf 13 t=6.0s texts=0 codes=0 findings=0 lat=241ms
+# kf 14 t=6.5s texts=26 codes=0 findings=5 lat=360ms
+# kf 15 t=7.0s texts=26 codes=0 findings=3 lat=293ms
+# kf 16 t=7.5s texts=3 codes=0 findings=0 lat=210ms
+# kf 17 t=8.0s texts=54 codes=0 findings=4 lat=440ms
+# kf 18 t=8.5s texts=51 codes=0 findings=4 lat=586ms
+# kf 19 t=9.0s texts=27 codes=0 findings=0 lat=465ms
+# kf 20 t=9.5s texts=30 codes=0 findings=1 lat=291ms
+# kf 22 t=10.5s texts=57 codes=0 findings=4 lat=358ms
+# kf 23 t=11.0s texts=36 codes=0 findings=5 lat=251ms
+# kf 24 t=11.5s texts=34 codes=0 findings=5 lat=267ms
+# kf 25 t=12.0s texts=28 codes=0 findings=7 lat=363ms
+# kf 27 t=13.0s texts=30 codes=0 findings=5 lat=253ms
+# kf 28 t=13.5s texts=0 codes=0 findings=0 lat=202ms
+# kf 29 t=14.0s texts=35 codes=0 findings=4 lat=378ms
+# kf 33 t=16.0s texts=20 codes=0 findings=0 lat=762ms
+# kf 34 t=16.5s texts=37 codes=0 findings=4 lat=334ms
+# kf 35 t=17.0s texts=18 codes=0 findings=0 lat=310ms
+# kf 36 t=17.5s texts=35 codes=0 findings=0 lat=899ms
+# kf 37 t=18.0s texts=33 codes=0 findings=0 lat=379ms
+# kf 38 t=18.5s texts=31 codes=0 findings=0 lat=619ms
+# kf 40 t=19.5s texts=26 codes=0 findings=0 lat=458ms
+# kf 41 t=20.0s texts=0 codes=0 findings=0 lat=194ms
+# kf 42 t=20.5s texts=0 codes=0 findings=0 lat=294ms
+# kf 43 t=21.0s texts=0 codes=0 findings=0 lat=204ms
+# kf 44 t=21.5s texts=0 codes=0 findings=0 lat=256ms
+# kf 45 t=22.0s texts=0 codes=0 findings=0 lat=161ms
+[vost#1:0/png @ 0xa732af600] Error submitting a packet to the muxer: Broken pipe
+    Last message repeated 1 times
+[out#1/image2pipe @ 0xa7333c900] Error muxing a packet
+[out#1/image2pipe @ 0xa7333c900] Task finished with error code: -32 (Broken pipe)
+[out#1/image2pipe @ 0xa7333c900] Terminating thread with return code -32 (Broken pipe)
+[out#1/image2pipe @ 0xa7333c900] Error writing trailer: Broken pipe
+[out#1/image2pipe @ 0xa7333c900] Error closing file: Broken pipe

@@ -1,0 +1,8 @@
+{
+  "must": [
+    "qr-url"
+  ],
+  "must_not": [],
+  "source": "room-e2g-screen.mp4",
+  "t": 0.0
+}
