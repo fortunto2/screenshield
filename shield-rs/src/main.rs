@@ -7,6 +7,7 @@ mod ocr;
 mod policy;
 mod redact;
 mod respond;
+mod review;
 mod store;
 
 use anyhow::Result;
@@ -40,6 +41,8 @@ enum Cmd {
     Respond { findings: PathBuf, #[arg(long, default_value = ".shield")] work: PathBuf, #[arg(long)] execute: bool },
     /// Slow loop: crawl an archive of recordings, respond, build the dataset the fast loop learns from
     Audit { archive: PathBuf, #[arg(long, default_value = ".shield")] work: PathBuf, #[arg(long, default_value = "dataset")] dataset: PathBuf, #[arg(long, default_value_t = 1.0)] fps: f64, #[arg(long, default_value_t = 8)] min_change: u32, #[arg(long)] execute: bool },
+    /// The agent re-checks stored findings: vision confirms/rejects, OCR on the redacted recording proves the blur
+    Review { #[arg(long, default_value = ".shield")] work: PathBuf, #[arg(long, default_value_t = 200)] limit: usize },
     /// Run OCR + detectors over a fixtures dir and report the catch rate
     Eval { #[arg(default_value = "fixtures")] fixtures: PathBuf, #[arg(long)] allow: Vec<String> },
     /// Blur every finding box from a scan output into a new recording
@@ -73,6 +76,7 @@ fn main() -> Result<()> {
             println!("{}", serde_json::to_string_pretty(&rep)?);
             Ok(())
         }
+        Cmd::Review { work, limit } => { println!("{}", serde_json::to_string_pretty(&review::run(&work, limit)?)?); Ok(()) }
         Cmd::Eval { fixtures, allow } => { println!("{}", serde_json::to_string_pretty(&evalrun::run(&fixtures, &allow)?)?); Ok(()) }
         Cmd::Redact { src, findings, dst, hold } => {
             // boxes come from the analysis frame (full resolution); the recording may be scaled, so rescale by width
@@ -149,6 +153,11 @@ fn scan(source: &str, work: &Path, fps: f64, min_change: u32, limit: Option<u64>
     }
     eprintln!("# done frames={n_frames} findings={n_findings} store={} in {:.1}s", store.backend(), t0.elapsed().as_secs_f64());
     Ok(())
+}
+
+/// Seconds into the recording from a keyframe file name (shared with respond/review).
+pub fn respond_seconds(frame: &str) -> f64 {
+    std::path::Path::new(frame).file_stem().and_then(|s| s.to_str()).and_then(|s| s.split('_').nth(1)).and_then(|t| t.parse().ok()).unwrap_or(0.0)
 }
 
 fn mask(s: &str) -> String { if s.len() > 8 { format!("{}{}", &s[..4], "*".repeat(s.len() - 4)) } else { "*".repeat(s.len()) } }

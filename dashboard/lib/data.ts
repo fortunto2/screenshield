@@ -17,6 +17,11 @@ export type ToolCall = {
   tainted: number; verdict: string; reason: string;
 };
 
+export type Review = {
+  ts: string; stream_id: string; rule: string; kind: string; frame_path: string;
+  vision_confirmed: boolean | null; vision_why: string; redaction_ok: boolean | null; reviewer: string;
+};
+
 export const WORK = path.resolve(process.cwd(), process.env.SHIELD_WORK ?? "../.shield-archive");
 
 function readJsonl<T>(name: string): T[] {
@@ -56,6 +61,13 @@ export async function toolCalls(stream?: string): Promise<ToolCall[]> {
   if (backend() === "clickhouse")
     return ch(`SELECT * FROM tool_calls ${stream ? `WHERE stream_id = '${esc(stream)}'` : ""} ORDER BY ts LIMIT 5000`);
   const rows = readJsonl<ToolCall>("tool_calls");
+  return stream ? rows.filter((r) => r.stream_id === stream) : rows;
+}
+
+export async function reviews(stream?: string): Promise<Review[]> {
+  if (backend() === "clickhouse")
+    return ch(`SELECT * FROM reviews ${stream ? `WHERE stream_id = '${esc(stream)}'` : ""} ORDER BY ts LIMIT 5000`);
+  const rows = readJsonl<Review>("reviews");
   return stream ? rows.filter((r) => r.stream_id === stream) : rows;
 }
 
