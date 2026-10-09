@@ -21,7 +21,10 @@ stream (screen · camera · SRT/RTMP) ─► keyframes ─► OCR + QR (Apple Vi
 - **Slow loop, the agent, over the archive** (`shield audit`): crawls the recording library, calls a vision model
   only where regexes are blind, verifies and decides per policy, cleans old recordings (redact / retention / hold),
   writes the evidence log, and **produces the dataset the fast loop learns from** (`dataset/`: labelled keyframes
-  and expectations that feed `shield eval`). Batch, autonomous, cheap to run nightly.
+  and expectations that feed `shield eval`). Batch, autonomous, cheap to run nightly. `shield review` then goes
+  back over stored findings: a vision model confirms or rejects each one (false-positive filter) and OCR on the
+  redacted recording proves the blur actually removed the text. Verified live: 4/4 confirmed and 4/4 blur-verified
+  on the camera recording; 7 confirmed, 1 rejected across the archive.
 
 ## One binary (Rust) and a reference implementation (Python)
 
@@ -38,6 +41,7 @@ shield redact in.mp4 findings.jsonl out.mp4     # blur every finding box
 shield respond findings.jsonl                   # responder agent: sgr-agent tool calling on any OpenAI-compatible
                                                 #   endpoint (AKASHML_API_KEY/BASE_URL/MODEL), rule-based planner offline
 shield audit ./recordings                       # slow loop → dataset/ + report.json
+shield review --work .shield                    # the agent re-checks findings: vision confirm/reject, blur verified by OCR
 shield eval fixtures                            # catch rate over fixtures
 ```
 
