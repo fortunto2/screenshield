@@ -35,10 +35,10 @@ pub fn input_args(source: &str) -> Vec<String> {
     }
     if let Some(name) = source.strip_prefix("cam:") {
         let idx = avf_index(name).unwrap_or(0);
-        return s(&["-f", "avfoundation", "-framerate", "30", "-pixel_format", "uyvy422", "-i", &format!("{idx}:none")]);
+        return s(&["-f", "avfoundation", "-framerate", "30", "-pixel_format", "nv12", "-video_size", "1280x720", "-i", &format!("{idx}:none")]);
     }
     if let Some(idx) = source.strip_prefix("camera:") {
-        return s(&["-f", "avfoundation", "-framerate", "30", "-pixel_format", "uyvy422", "-i", &format!("{idx}:none")]);
+        return s(&["-f", "avfoundation", "-framerate", "30", "-pixel_format", "nv12", "-video_size", "1280x720", "-i", &format!("{idx}:none")]);
     }
     s(&["-i", source])
 }

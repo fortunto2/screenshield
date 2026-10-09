@@ -23,6 +23,31 @@ pub fn build_filter(regions: &[Region]) -> (String, String) {
     (parts.join(";"), prev)
 }
 
+/// Merge regions whose boxes overlap (same on-screen line across consecutive keyframes) into one region
+/// spanning the union box and the whole time window. 22 overlapping overlays → 1 or 2: ffmpeg goes from
+/// minutes to seconds and the blur stays continuous instead of flickering.
+pub fn merge_regions(mut regs: Vec<Region>) -> Vec<Region> {
+    regs.sort_by(|a, b| a.t_from.partial_cmp(&b.t_from).unwrap());
+    let mut out: Vec<Region> = Vec::new();
+    for r in regs {
+        if let Some(m) = out.iter_mut().find(|m| overlaps(m, &r) && r.t_from <= m.t_to + 2.0) {
+            let x0 = m.x.min(r.x); let y0 = m.y.min(r.y);
+            let x1 = (m.x + m.w).max(r.x + r.w); let y1 = (m.y + m.h).max(r.y + r.h);
+            m.x = x0; m.y = y0; m.w = x1 - x0; m.h = y1 - y0;
+            m.t_from = m.t_from.min(r.t_from); m.t_to = m.t_to.max(r.t_to);
+        } else { out.push(r); }
+    }
+    out
+}
+
+fn overlaps(a: &Region, b: &Region) -> bool {
+    let ix = (a.x + a.w).min(b.x + b.w) - a.x.max(b.x);
+    let iy = (a.y + a.h).min(b.y + b.h) - a.y.max(b.y);
+    if ix <= 0.0 || iy <= 0.0 { return false; }
+    let inter = ix * iy;
+    inter / (a.w * a.h).min(b.w * b.h).max(1.0) > 0.3
+}
+
 pub fn video_width(src: &Path) -> Option<f64> {
     let out = Command::new("ffprobe").args(["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width", "-of", "csv=p=0"]).arg(src).output().ok()?;
     String::from_utf8_lossy(&out.stdout).trim().parse().ok()
@@ -41,6 +66,13 @@ pub fn redact(src: &Path, dst: &Path, regions: &[Region]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn merge_collapses_same_line_over_time() {
+        let regs: Vec<Region> = (0..10).map(|i| Region { t_from: i as f64 * 0.5, t_to: i as f64 * 0.5 + 1.0, x: 100.0 + i as f64, y: 50.0, w: 400.0, h: 30.0 }).collect();
+        let m = merge_regions(regs);
+        assert_eq!(m.len(), 1);
+        assert!((m[0].t_to - 5.5).abs() < 1e-9 && m[0].t_from == 0.0);
+    }
     #[test]
     fn one_overlay_per_region_with_window() {
         let (g, last) = build_filter(&[Region { t_from: 1.0, t_to: 2.5, x: 10.0, y: 20.0, w: 100.0, h: 30.0 }, Region { t_from: 3.0, t_to: 4.0, x: 0.0, y: 0.0, w: 50.0, h: 50.0 }]);
