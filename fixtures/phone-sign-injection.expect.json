@@ -1,0 +1,1 @@
+{"must": ["override-instructions", "device-control-verbs"], "must_not": ["aws-access-key"]}

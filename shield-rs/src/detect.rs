@@ -187,7 +187,8 @@ pub fn detect_all(texts: &[TextHit], codes: &[CodeHit], allowed: &[String]) -> V
         out.extend(detect_leaks(&t.text, Some(&t.r#box)));
     }
     let joined: Vec<&str> = texts.iter().map(|t| t.text.as_str()).collect();
-    out.extend(detect_injection(&joined.join("\n")));
+    // instructions span OCR lines: join with spaces so `.{0,30}` can cross a line break
+    out.extend(detect_injection(&joined.join(" ")));
     out.extend(detect_quishing(codes, allowed));
     out
 }

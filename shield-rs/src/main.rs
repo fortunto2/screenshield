@@ -32,6 +32,8 @@ enum Cmd {
         #[arg(long)] limit: Option<u64>,
         #[arg(long)] allow: Vec<String>,
         #[arg(long, default_value = "room-local")] room: String,
+        /// Also record the source to <work>/recording.mp4 (the file `redact` later blurs)
+        #[arg(long)] record: bool,
         #[arg(short, long)] verbose: bool,
     },
     /// Run the responder agent over a findings.jsonl (dry-run by default)
@@ -47,7 +49,12 @@ enum Cmd {
 fn main() -> Result<()> {
     load_env();
     match Cli::parse().cmd {
-        Cmd::Scan { source, work, fps, min_change, limit, allow, room, verbose } => scan(&source, &work, fps, min_change, limit, &allow, &room, verbose),
+        Cmd::Scan { source, work, fps, min_change, limit, allow, room, record, verbose } => {
+            let mut rec = if record { Some(start_recording(&source, &work)?) } else { None };
+            let r = scan(&source, &work, fps, min_change, limit, &allow, &room, verbose);
+            if let Some(mut c) = rec.take() { use std::io::Write; if let Some(si) = c.stdin.as_mut() { let _ = si.write_all(b"q"); } let _ = c.wait(); eprintln!("# recording saved to {}", work.join("recording.mp4").display()); }
+            r
+        }
         Cmd::Respond { findings, work, execute } => {
             let store = store::Store::new(&work)?;
             let mut r = respond::Responder::new(policy::Policy::load(), !execute);
@@ -80,6 +87,15 @@ fn main() -> Result<()> {
             Ok(())
         }
     }
+}
+
+fn start_recording(source: &str, work: &Path) -> Result<std::process::Child> {
+    std::fs::create_dir_all(work)?;
+    let mut cmd = std::process::Command::new("ffmpeg");
+    cmd.args(["-hide_banner", "-loglevel", "error", "-y"]).args(frames::input_args(source))
+        .args(["-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", "-g", "25"]).arg(work.join("recording.mp4"))
+        .stdin(std::process::Stdio::piped());
+    Ok(cmd.spawn()?)
 }
 
 fn load_env() {

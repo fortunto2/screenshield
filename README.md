@@ -23,7 +23,24 @@ stream (screen · camera · SRT/RTMP) ─► keyframes ─► OCR + QR (Apple Vi
   writes the evidence log, and **produces the dataset the fast loop learns from** (`dataset/`: labelled keyframes
   and expectations that feed `shield eval`). Batch, autonomous, cheap to run nightly.
 
-## Try it (macOS, 2 minutes)
+## One binary (Rust) and a reference implementation (Python)
+
+`shield-rs/` is the product: one static binary `shield` built on fortunto2 crates (sgr-agent for the responder's
+tool calling, openai-oxide underneath, va-scene/va-features next). `screenshield/` (Python) is the reference
+implementation and test oracle; both read the same fixtures and produce the same findings.
+
+```bash
+cd shield-rs && cargo build --release          # → target/release/shield
+shield scan fixtures/lecture-7s.mp4             # findings, 2 keyframes, < 1 s
+shield scan screen --record -v                  # fast loop on your screen, parallel recording
+shield scan "cam:MacBook Pro Camera" --limit 5  # any avfoundation device by name
+shield redact in.mp4 findings.jsonl out.mp4     # blur every finding box
+shield respond findings.jsonl                   # responder agent (sgr-agent tool calling on AkashML, rules offline)
+shield audit ./recordings                       # slow loop → dataset/ + report.json
+shield eval fixtures                            # catch rate over fixtures
+```
+
+## Try it (Python reference, macOS, 2 minutes)
 
 ```bash
 make vision                       # builds bin/visionscan (Swift, Apple Vision OCR + barcode)

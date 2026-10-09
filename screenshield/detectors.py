@@ -159,7 +159,7 @@ def detect_injection(text: str, box=None) -> list[Finding]:
 def detect_all(texts: list[dict], codes: list[dict], allowed_domains: set[str] | None = None) -> list[Finding]:
     """texts: [{text, conf, box}] from OCR; codes: [{payload, symbology, box}]."""
     findings: list[Finding] = []
-    joined = "\n".join(t["text"] for t in texts)
+    joined = " ".join(t["text"] for t in texts)  # instructions span OCR lines
     for t in texts:
         box = t.get("box")
         b = (box["x"], box["y"], box["w"], box["h"]) if box else None
