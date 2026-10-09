@@ -41,6 +41,20 @@ shield audit ./recordings                       # slow loop → dataset/ + repor
 shield eval fixtures                            # catch rate over fixtures
 ```
 
+## Archive dashboard (Next.js)
+
+`dashboard/` shows what the slow loop produced: every recording with its keyframes, findings by kind, worst
+severity and responder actions; a recording page with a findings timeline, the keyframes and the agent's
+tool calls. Reads the same three tables from JSONL (`SHIELD_WORK`, default `../.shield-archive`) or from
+ClickHouse when `CLICKHOUSE_HOST` is set.
+
+```bash
+shield audit ./archive --work .shield-archive     # produce the data
+cd dashboard && pnpm install && pnpm dev            # http://localhost:3000
+```
+
+![archive](web/archive-home.png)
+
 ## Try it (Python reference, macOS, 2 minutes)
 
 ```bash
