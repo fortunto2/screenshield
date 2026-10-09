@@ -75,11 +75,15 @@ fn main() -> Result<()> {
         }
         Cmd::Eval { fixtures, allow } => { println!("{}", serde_json::to_string_pretty(&evalrun::run(&fixtures, &allow)?)?); Ok(()) }
         Cmd::Redact { src, findings, dst, hold } => {
+            // boxes come from the analysis frame (full resolution); the recording may be scaled, so rescale by width
+            let rec_w = redact::video_width(&src).unwrap_or(0.0);
             let mut regs = Vec::new();
             for line in std::fs::read_to_string(&findings)?.lines().filter(|l| !l.trim().is_empty()) {
                 let f: serde_json::Value = serde_json::from_str(line)?;
                 if let (Some(ts), Some(b)) = (f["ts"].as_f64(), f["box"].as_object()) {
-                    regs.push(redact::Region { t_from: ts, t_to: ts + hold, x: b["x"].as_f64().unwrap_or(0.0), y: b["y"].as_f64().unwrap_or(0.0), w: b["w"].as_f64().unwrap_or(0.0), h: b["h"].as_f64().unwrap_or(0.0) });
+                    let k = match (f["frame_w"].as_f64(), rec_w) { (Some(fw), rw) if fw > 0.0 && rw > 0.0 => rw / fw, _ => 1.0 };
+                    let g = |key: &str| b[key].as_f64().unwrap_or(0.0) * k;
+                    regs.push(redact::Region { t_from: ts, t_to: ts + hold, x: g("x"), y: g("y"), w: g("w"), h: g("h") });
                 }
             }
             redact::redact(&src, &dst, &regs)?;
@@ -136,7 +140,7 @@ fn scan(source: &str, work: &Path, fps: f64, min_change: u32, limit: Option<u64>
                 "box": f.r#box.as_ref().map(|b| vec![b.x, b.y, b.w, b.h]).unwrap_or_default(),
                 "action": if f.r#box.is_some() && f.kind == "leak" { "blurred" } else { "logged" }, "frame_path": frame.path.to_string_lossy()
             }));
-            println!("{}", serde_json::json!({"ts": frame.ts, "frame": frame.path, "lat_ms": tf.elapsed().as_millis() as u64, "kind": f.kind, "rule": f.rule, "severity": f.severity, "match": f.r#match, "reason": f.reason, "box": f.r#box}));
+            println!("{}", serde_json::json!({"ts": frame.ts, "frame": frame.path, "frame_w": res.width, "frame_h": res.height, "lat_ms": tf.elapsed().as_millis() as u64, "kind": f.kind, "rule": f.rule, "severity": f.severity, "match": f.r#match, "reason": f.reason, "box": f.r#box}));
         }
         store.insert("findings", &rows)?;
         if verbose { eprintln!("# kf {} t={:.1}s texts={} codes={} findings={} lat={}ms", frame.index, frame.ts, res.texts.len(), res.codes.len(), findings.len(), tf.elapsed().as_millis()); }
