@@ -79,12 +79,17 @@ pub struct FrameIter {
 const IEND: &[u8] = b"IEND\xaeB`\x82";
 
 impl FrameIter {
-    pub fn open(source: &str, out_dir: &Path, fps: f64, min_change: u32, limit: Option<u64>) -> Result<Self> {
+    /// `record`: also write the source to this file from the SAME ffmpeg process (a second output), because
+    /// macOS lets only one process own the screen/camera device.
+    pub fn open(source: &str, out_dir: &Path, fps: f64, min_change: u32, limit: Option<u64>, record: Option<&Path>) -> Result<Self> {
         std::fs::create_dir_all(out_dir)?;
         let mut cmd = Command::new("ffmpeg");
-        cmd.args(["-hide_banner", "-loglevel", "error"]).args(input_args(source));
+        cmd.args(["-hide_banner", "-loglevel", "error", "-y"]).args(input_args(source));
+        if let Some(rec) = record {
+            cmd.args(["-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", "-g", "25", "-movflags", "+frag_keyframe+empty_moov"]).arg(rec);
+        }
         if !is_image(source) { cmd.args(["-vf", &format!("fps={fps}")]); }
-        cmd.args(["-f", "image2pipe", "-vcodec", "png", "-"]).stdout(Stdio::piped()).stdin(Stdio::null());
+        cmd.args(["-f", "image2pipe", "-vcodec", "png", "-"]).stdout(Stdio::piped()).stdin(Stdio::piped());
         let child = cmd.spawn().context("ffmpeg not found or failed to start")?;
         Ok(Self { child, buf: Vec::new(), index: 0, kept: 0, fps, min_change, limit, last: None, out_dir: out_dir.into() })
     }
@@ -110,7 +115,7 @@ impl FrameIter {
 impl Iterator for FrameIter {
     type Item = Frame;
     fn next(&mut self) -> Option<Frame> {
-        if let Some(l) = self.limit { if self.kept >= l { let _ = self.child.kill(); return None; } }
+        if let Some(l) = self.limit { if self.kept >= l { self.stop(); return None; } }
         loop {
             let png = self.next_png()?;
             let ts = self.index as f64 / self.fps;
@@ -130,4 +135,17 @@ impl Iterator for FrameIter {
     }
 }
 
-impl Drop for FrameIter { fn drop(&mut self) { let _ = self.child.kill(); } }
+impl FrameIter {
+    /// Ask ffmpeg to finish cleanly (so the recording gets its trailer), then kill if it lingers.
+    pub fn stop(&mut self) {
+        use std::io::Write;
+        if let Some(mut si) = self.child.stdin.take() { let _ = si.write_all(b"q"); let _ = si.flush(); }
+        for _ in 0..30 {
+            if let Ok(Some(_)) = self.child.try_wait() { return; }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        let _ = self.child.kill();
+    }
+}
+
+impl Drop for FrameIter { fn drop(&mut self) { self.stop(); } }
