@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ScreenShield Deck</title>
+<style>
+:root{--bg:#0f1115;--fg:#eceef2;--mut:#8b90a0;--acc:#ff9f1c;--acc2:#2ec4b6;--crit:#ff4d4f;--card:#171a21;--line:#262a33}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:20px/1.45 -apple-system,"Inter",Helvetica,Arial,sans-serif}
+.deck{height:100%;overflow:hidden}
+section{display:none;height:100%;padding:64px 96px;flex-direction:column;justify-content:center;gap:22px}
+section.on{display:flex}
+h1{font-size:64px;line-height:1.05;margin:0}
+h2{font-size:40px;margin:0 0 6px;line-height:1.1}
+h3{font-size:22px;margin:0;color:var(--acc)}
+p{margin:0;max-width:1100px}
+.sub{color:var(--mut);font-size:26px}
+.k{color:var(--acc)}.t{color:var(--acc2)}.r{color:var(--crit)}
+.row{display:flex;gap:24px;align-items:stretch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 24px;flex:1;min-width:0}
+.card h3{margin-bottom:8px}
+ul{margin:0;padding-left:22px}li{margin:4px 0}
+table{border-collapse:collapse;width:100%;font-size:19px}
+td,th{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mut);font-weight:500}
+code{font-family:ui-monospace,Menlo,monospace;font-size:0.9em;background:#1f2330;padding:1px 6px;border-radius:4px}
+pre{font-family:ui-monospace,Menlo,monospace;font-size:18px;line-height:1.5;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin:0;white-space:pre}
+.foot{position:fixed;left:96px;right:96px;bottom:28px;display:flex;justify-content:space-between;color:var(--mut);font-size:15px}
+.big{font-size:30px}
+.num{font-size:56px;font-weight:700;line-height:1}.num small{display:block;font-size:17px;color:var(--mut);font-weight:400;margin-top:4px}
+.pipe{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pipe span{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;font-size:19px}
+.pipe i{color:var(--mut);font-style:normal}
+.gate{border-color:var(--acc)}
+@media (max-width:900px){section{padding:32px 20px}h1{font-size:40px}h2{font-size:30px}.row{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="deck">
+
+<section class="on">
+  <p class="sub">Cyberdefense Hackathon · SF Tech Week · 9 Oct 2026</p>
+  <h1>ScreenShield</h1>
+  <p class="big"><span class="k">Video is an untrusted channel.</span> Secrets leak out, attacks come in.<br>Live in seconds, across the archive in minutes.</p>
+  <p class="sub">One Rust binary · fast loop on the device · agent over the archive</p>
+</section>
+
+<section>
+  <h2>Every classroom and boardroom records a screen</h2>
+  <div class="row">
+    <div class="card"><h3>Leaks out</h3><ul>
+      <li>.env, API keys, DB URLs during dev workshops and town halls</li>
+      <li>Grades, e-mails, LMS tabs in lectures (a listed FERPA violation)</li>
+      <li>A recording in which a student is identifiable is part of their education record</li></ul></div>
+    <div class="card"><h3>Attacks in</h3><ul>
+      <li><b>Quishing:</b> one QR on a slide, 300 phones scan it; 67% sign in through a malicious QR (field study)</li>
+      <li><b>Visual prompt injection:</b> agents now watch camera feeds through MCP; text in the frame steers them</li>
+      <li>VPI-Bench (ICLR 2026): up to 100% success against computer-use agents</li></ul></div>
+  </div>
+  <p class="sub">Nobody owns this: the leak is the presenter's mistake, so nobody asks the vendor and nobody sells a fix.</p>
+</section>
+
+<section>
+  <h2>Two loops, two speeds</h2>
+  <div class="row">
+    <div class="card"><h3 class="t">FAST LOOP · online · on the device</h3>
+      <p class="big">Protection module. No LLM. Works offline.</p>
+      <ul><li>keyframes → OCR + QR → detectors → gates → blur → events</li>
+      <li>0.3–0.8 s per keyframe on a MacBook, Apple Vision on-device</li>
+      <li>Runs where the stream is: Pearl-class encoder, Mac, SRT/RTMP ingest</li></ul></div>
+    <div class="card"><h3 class="k">SLOW LOOP · offline · the agent</h3>
+      <p class="big">Autonomous audit of the archive. Batch, nightly.</p>
+      <ul><li>Vision model only where regexes are blind (grades, mail, payments)</li>
+      <li>Decides per policy; redacts, revokes, applies retention, writes the evidence log</li>
+      <li><b>Produces the dataset the fast loop learns from</b></li></ul></div>
+  </div>
+  <p class="sub">The agent is too slow for the stream, so it never sits in it. The fast loop is too dumb for context, so it never decides alone.</p>
+</section>
+
+<section>
+  <h2>Fast loop: what happens to a frame</h2>
+  <div class="pipe">
+    <span>screen · camera · SRT/RTMP</span><i>→</i>
+    <span>keyframes (dHash, va-scene next)</span><i>→</i>
+    <span>OCR + QR (Apple Vision)</span><i>→</i>
+    <span>detectors: leak · quishing · injection</span><i>→</i>
+    <span class="gate">gates</span><i>→</i>
+    <span>blur in recording</span><i>→</i>
+    <span>ClickHouse events</span>
+  </div>
+  <div class="row">
+    <div class="card"><h3>leak</h3><p>AWS, GitHub, Stripe, OpenAI, Slack keys; private-key blocks; JWT; password=; DB URLs; env secrets; e-mail, SSN, Luhn-checked cards</p></div>
+    <div class="card"><h3>quishing</h3><p>QR → URL: shortener, raw IP, suspicious TLD, brand lookalike, plain http; action QRs (wifi, otpauth)</p></div>
+    <div class="card"><h3>injection</h3><p>override instructions, agent address, system-prompt markers, tool-call requests, device-control verbs, exfil verbs. Lines joined: instructions span OCR rows.</p></div>
+  </div>
+  <p class="sub">14 frames at 2 fps → 2 keyframes → 7 findings in 0.8 s. Redaction verified: after the blur, OCR no longer reads the key and the QR no longer decodes.</p>
+</section>
+
+<section>
+  <h2>Gates for any agent that watches the feed <span class="sub">(DRIFT, Li &amp; Xiao, NeurIPS 2025)</span></h2>
+  <div class="row">
+    <div class="card"><h3>Control constraints</h3><p>Read tools pass. Write tools are an allowlist. <code>factory_reset</code>, <code>set_admin_password</code> always need a human.</p></div>
+    <div class="card"><h3>Data provenance (taint)</h3><p>Every token seen in a frame is remembered for 120 s. A tool argument containing one is <span class="r">blocked</span>: the value came from external content.</p></div>
+    <div class="card"><h3>Approved destinations</h3><p><code>set_stream_destination</code> only to hosts in policy. The frame can never extend the allowlist.</p></div>
+    <div class="card"><h3>Injection isolator</h3><p>Frame text handed to an agent has instruction-like lines replaced by <code>[external content removed]</code>. It learns <i>that</i> there was text, never <i>what it ordered</i>.</p></div>
+  </div>
+  <p class="sub">Deterministic, outside the model. VLMs score 100% unsafe on "move the knife" frames (Xiao); the gate cannot rely on the model refusing.</p>
+</section>
+
+<section>
+  <h2>The responder agent</h2>
+  <div class="row">
+    <div class="card" style="flex:1.2"><h3>Input</h3><ul>
+      <li><b>one finding</b> (kind, rule, severity, box, time)</li>
+      <li><b>policy</b> from Senso: approved destinations, allowed QR domains, sensitive classes</li>
+      <li><b>fleet facts</b> from ClickHouse: "this QR is already in 31 rooms"</li></ul>
+      <h3 style="margin-top:12px">Tools</h3>
+      <p><code>redact_segment</code> <code>revoke_credential</code> <code>block_destination</code> <code>notify_human</code> <code>apply_retention</code> <code>write_incident</code></p></div>
+    <div class="card"><h3>Runtime</h3><ul>
+      <li>sgr-agent (Rust) tool calling on an open model via AkashML (gpt-oss-120b)</li>
+      <li>Rule-based planner when offline: same tools, same log</li>
+      <li>Every call passes the same gates; dry-run by default</li>
+      <li>Human before anything that drops a live stream</li>
+      <li>Always ends with <code>write_incident</code>: the evidence log is the product</li></ul></div>
+  </div>
+</section>
+
+<section>
+  <h2>ClickHouse: the fleet, not the frame</h2>
+  <div class="row">
+    <div class="card"><div class="num">57M<small>keyframe rows per day · 10k rooms · 8 h · one every 5 s</small></div></div>
+    <div class="card"><div class="num">3<small>tables: frame_events · findings · tool_calls (agent log in the same DB)</small></div></div>
+    <div class="card"><div class="num">ms<small>per fleet query, the demo stories below</small></div></div>
+  </div>
+  <table>
+    <tr><th>Story</th><th>Query</th><th>Why only a fleet DB can answer</th></tr>
+    <tr><td>Secret held on screen</td><td>min/max ts per match_hash → seconds on screen, keyframes, last action</td><td>one room is an accident; the duration and repeats decide the response</td></tr>
+    <tr><td>QR campaign</td><td>uniq(room_id) per QR payload in 20 min, HAVING ≥ 3</td><td>31 rooms = attack, not a typo</td></tr>
+    <tr><td>Frame text → tool call</td><td>findings ⋈ tool_calls on stream_id, t within 120 s</td><td>proves the injection: text at t, tool call with that value at t+2 s</td></tr>
+  </table>
+  <p class="sub">No embeddings of ordinary screens. Vectors only for flagged frames and per-room baselines: unknown attacks show up as anomaly against the room's own normal, not as kNN to examples we do not have.</p>
+</section>
+
+<section>
+  <h2>Modes of operation</h2>
+  <table>
+    <tr><th></th><th>Online · fast loop</th><th>Offline · slow loop</th></tr>
+    <tr><td>Where</td><td>on the device / edge, next to the encoder</td><td>cloud, batch, nightly</td></tr>
+    <tr><td>Input</td><td>screen, camera, SRT/RTMP stream</td><td>archive of recordings</td></tr>
+    <tr><td>Brains</td><td>regex, QR checks, hashes, gates. No LLM.</td><td>sgr-agent + open vision model on AkashML</td></tr>
+    <tr><td>Latency</td><td>&lt; 1 s to flag, blur in the recording</td><td>minutes per thousand recordings</td></tr>
+    <tr><td>Network</td><td>works offline; events queue to ClickHouse</td><td>needs ClickHouse, Senso, AkashML</td></tr>
+    <tr><td>Output</td><td>blurred recording, findings, events</td><td>incidents, retention, revoked keys, <b>dataset/</b> for the fast loop</td></tr>
+    <tr><td>CLI</td><td><code>shield scan screen --record</code></td><td><code>shield audit ./recordings</code></td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Sponsor tools, each in its own place</h2>
+  <table>
+    <tr><th>Tool</th><th>Role</th></tr>
+    <tr><td>ClickHouse</td><td>fleet telemetry + agent log, the three stories, real-time dashboard</td></tr>
+    <tr><td>AkashML</td><td>responder (gpt-oss-120b, tool calling) and vision review of flagged frames (Qwen3.8-27B)</td></tr>
+    <tr><td>Senso</td><td>org policy as verified context: what the agent knows before it writes</td></tr>
+    <tr><td>Guild</td><td>hosts and traces the responder, triggers on new recordings</td></tr>
+    <tr><td>Semgrep</td><td>Guardian on the repo while it was written; secrets patterns mirrored in the detectors</td></tr>
+  </table>
+  <p class="sub">What should the agent know before it writes? Policy. Which boundaries could its changes affect? Live streams, destinations. What is it guessing? Nothing: facts come from the DB, decisions from policy, and the frame is never trusted.</p>
+</section>
+
+<section>
+  <h2>What exists today</h2>
+  <div class="row">
+    <div class="card"><div class="num">1<small>Rust binary: scan · redact · respond · audit · eval</small></div></div>
+    <div class="card"><div class="num">41<small>tests (15 Rust, 26 Python reference)</small></div></div>
+    <div class="card"><div class="num">100%<small>catch rate on the fixture set, 0 false positives</small></div></div>
+    <div class="card"><div class="num">0.8 s<small>7 findings from a live screen</small></div></div>
+  </div>
+  <pre>shield scan screen --record -v            # fast loop, parallel recording
+shield redact rec.mp4 findings.jsonl out.mp4   # blur every finding box (rescaled to the recording)
+shield scan "cam:MacBook Pro Camera"       # any avfoundation device by name
+shield respond findings.jsonl              # the agent decides, dry-run by default
+shield audit ./recordings                  # slow loop → dataset/ + report.json</pre>
+</section>
+
+<section>
+  <h2>Why this, why now</h2>
+  <div class="row">
+    <div class="card"><h3>Context</h3><p>Pearl-class lecture-capture encoders push SRT/RTMP from thousands of rooms. The moment such devices open to AI agents, the video itself becomes an attack surface (Mike Sandler, Epiphan). Chaowei Xiao (JHU / NVIDIA) said the same at Stanford this week.</p></div>
+    <div class="card"><h3>What customers actually ask for</h3><p>Not "blur". SOC 2, HIPAA, VPAT, DPA, retention policy. ScreenShield answers the questionnaire with an artifact: the recording leaves with secrets removed, and every case has a log.</p></div>
+    <div class="card"><h3>Next</h3><ul><li>va-scene keyframes and text prefilter from the video-analyzer crates</li><li>Guild-hosted responder with triggers</li><li>per-room baselines and anomaly scoring in ClickHouse</li><li>live credential verification before revoke</li></ul></div>
+  </div>
+  <p class="sub">MIT · github.com/fortunto2/screenshield · Rustam Salavatov</p>
+</section>
+
+</div>
+<div class="foot"><span>ScreenShield · video is an untrusted channel</span><span id="pg"></span></div>
+<script>
+const s=[...document.querySelectorAll('section')];let i=0;
+const pg=document.getElementById('pg');
+function go(n){s[i].classList.remove('on');i=(n+s.length)%s.length;s[i].classList.add('on');pg.textContent=(i+1)+' / '+s.length;location.hash=i+1;}
+addEventListener('keydown',e=>{if(['ArrowRight','PageDown',' '].includes(e.key))go(i+1);if(['ArrowLeft','PageUp'].includes(e.key))go(i-1);});
+addEventListener('click',e=>{if(e.clientX>innerWidth/2)go(i+1);else go(i-1);});
+const h=parseInt(location.hash.slice(1));go(isNaN(h)?0:h-1);
+</script>
+</body>
+</html>
