@@ -26,7 +26,8 @@ pub fn run(archive: &Path, work: &Path, dataset: &Path, fps: f64, min_change: u3
             let joined: String = res.texts.iter().map(|t| t.text.as_str()).collect::<Vec<_>>().join(" ");
             store.insert("frame_events", &[json!({"ts": crate::store::now_iso(), "org_id": responder.policy.org, "site_id": "archive", "room_id": room, "device_id": "archive",
                 "stream_id": stream_id, "source_kind": "archive", "phash": frame.dhash, "text_density": joined.len(), "n_texts": res.texts.len(), "n_codes": res.codes.len(),
-                "app_class": "unknown", "token_hashes": [], "qr_payload": res.codes.first().map(|c| c.payload.clone()).unwrap_or_default(), "viewers": 0, "embedding": []})])?;
+                "app_class": "unknown", "token_hashes": [], "qr_payload": res.codes.first().map(|c| c.payload.clone()).unwrap_or_default(), "viewers": 0, "embedding": [],
+                "ocr_text": joined.chars().take(4000).collect::<String>(), "frame_path": frame.path})])?;
             let rows: Vec<serde_json::Value> = findings.iter().map(|f| json!({"ts": crate::store::now_iso(), "org_id": responder.policy.org, "room_id": room, "stream_id": stream_id,
                 "kind": f.kind, "rule": f.rule, "severity": f.severity, "match_hash": 0, "match": if f.kind == "leak" { mask(&f.r#match) } else { f.r#match.clone() }, "reason": f.reason,
                 "box": f.r#box.as_ref().map(|b| vec![b.x, b.y, b.w, b.h]).unwrap_or_default(), "action": if f.r#box.is_some() && f.kind == "leak" { "blurred" } else { "logged" }, "frame_path": frame.path})).collect();

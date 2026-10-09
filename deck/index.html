@@ -153,8 +153,9 @@ pre{font-family:ui-monospace,Menlo,monospace;font-size:18px;line-height:1.5;back
     <tr><td>Secret held on screen</td><td>min/max ts per match_hash → seconds on screen, keyframes, last action</td><td>one room is an accident; the duration and repeats decide the response</td></tr>
     <tr><td>QR campaign</td><td>uniq(room_id) per QR payload in 20 min, HAVING ≥ 3</td><td>31 rooms = attack, not a typo</td></tr>
     <tr><td>Frame text → tool call</td><td>findings ⋈ tool_calls on stream_id, t within 120 s</td><td>proves the injection: text at t, tool call with that value at t+2 s</td></tr>
+    <tr><td>Grep the archive</td><td>frame_events WHERE ocr_text ILIKE '%billing-api%'</td><td>every recording where this repo or secret was ever on screen, in ms</td></tr>
   </table>
-  <p class="sub">No embeddings of ordinary screens. Vectors only for flagged frames and per-room baselines: unknown attacks show up as anomaly against the room's own normal, not as kNN to examples we do not have.</p>
+  <p class="sub">Text, not embeddings: every keyframe's OCR text is a row, so the agent greps the fleet like you grep a repo: "where else did this connection string, this repo name, this function show up?" Vectors only where text fails (per-room visual baselines for unknown attacks).</p>
 </section>
 
 <section>
