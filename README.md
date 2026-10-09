@@ -47,6 +47,15 @@ Set `CLICKHOUSE_HOST/USER/PASSWORD`, `AKASHML_API_KEY`, `SENSO_API_KEY` in `.env
 | Senso | the org policy document the agent reads before acting |
 | Guild | hosts and traces the responder |
 
+## Why nobody fixed it
+
+The leak is the presenter's mistake, so nobody reports it to the capture vendor and no vendor sells a fix. Yet
+compliance guides list "screen-sharing with a gradebook tab open" as a FERPA violation, and a recording in which a
+student is identifiable is part of their education record. On the attack side, 67% of people in a field study were
+willing to sign in through a malicious QR code, and only 8% abandon a suspicious link after seeing its preview.
+A device that catches what the presenter missed, and keeps the evidence log, turns "we think nothing leaked" into
+"here is the record".
+
 ## Background
 
 Chaowei Xiao (JHU / NVIDIA) at "Rethinking Agents", Stanford, 8 Oct 2026: once a device opens to third-party AI,
