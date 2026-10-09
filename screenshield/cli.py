@@ -9,10 +9,14 @@ import time
 from dataclasses import asdict
 from pathlib import Path
 
+from .dashboard import serve
 from .detectors import detect_all
+from .evalrun import run_eval
 from .frames import iter_frames
+from .ingest import ingest_synth
 from .live import run_live
 from .ocr import scan_images
+from .store import Store
 
 
 def cmd_scan(args: argparse.Namespace) -> int:
@@ -61,6 +65,20 @@ def main(argv: list[str] | None = None) -> int:
     lv.add_argument("-v", "--verbose", action="store_true")
     lv.set_defaults(fn=lambda a: run_live(a.source, Path(a.work), a.room, a.org, set(a.allow or []),
                                           set(a.approved), a.fps, a.min_change, a.limit, not a.no_record, a.verbose))
+    ev = sub.add_parser("eval", help="run OCR+detectors over fixtures/ and report catch rate")
+    ev.add_argument("--fixtures", default="fixtures")
+    ev.add_argument("--allow", nargs="*")
+    ev.set_defaults(fn=lambda a: print(json.dumps(run_eval(Path(a.fixtures), set(a.allow or [])), indent=1)) or 0)
+    db = sub.add_parser("dashboard", help="serve the local dashboard")
+    db.add_argument("--work", default=".shield")
+    db.add_argument("--port", type=int, default=8787)
+    db.set_defaults(fn=lambda a: serve(Path(a.work), a.port))
+    ig = sub.add_parser("ingest-synth", help="load synthetic fleet telemetry (10k rooms) into the store")
+    ig.add_argument("--work", default=".shield")
+    ig.add_argument("--rooms", type=int, default=10_000)
+    ig.add_argument("--days", type=int, default=1)
+    ig.add_argument("--max-rows", type=int, default=None)
+    ig.set_defaults(fn=lambda a: ingest_synth(Store(Path(a.work)), a.rooms, a.days, max_rows=a.max_rows) and 0)
     args = p.parse_args(argv)
     return args.fn(args)
 

@@ -1,0 +1,7 @@
+{
+  "org": "univ-demo",
+  "allowed_qr_domains": ["university.edu", "canvas.university.edu", "epiphan.com"],
+  "approved_destinations": ["live.epiphan.cloud", "cdn.university.edu"],
+  "sensitive_classes": ["credentials and API keys", "student grades and IDs", "personal email and messages",
+                        "payment and card data", "unreleased product material"]
+}

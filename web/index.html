@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"><title>ScreenShield</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#0f1115;--card:#171a21;--fg:#e8e8ea;--mut:#8b8f98;--crit:#ff4d4f;--high:#ff9f1c;--med:#ffd166;--low:#4cc9f0;--ok:#2ec4b6}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.4 -apple-system,Inter,sans-serif;padding:16px}
+h1{font-size:20px;margin:0 0 4px}h1 small{color:var(--mut);font-weight:400;margin-left:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:14px 0}
+.tile{background:var(--card);border-radius:10px;padding:12px}.tile b{display:block;font-size:26px}.tile span{color:var(--mut)}
+.cols{display:grid;grid-template-columns:1.2fr 1fr;gap:12px}@media(max-width:900px){.cols{grid-template-columns:1fr}}
+.card{background:var(--card);border-radius:10px;padding:12px;overflow:auto}
+table{width:100%;border-collapse:collapse}td,th{padding:6px 8px;text-align:left;border-bottom:1px solid #262a33;vertical-align:top}
+th{color:var(--mut);font-weight:500}.sev{padding:1px 6px;border-radius:4px;color:#000;font-weight:600;font-size:12px}
+.critical{background:var(--crit)}.high{background:var(--high)}.medium{background:var(--med)}.low{background:var(--low)}
+.kind{color:var(--mut)}code{font-family:ui-monospace,Menlo,monospace;font-size:12px;word-break:break-all}
+.ms{color:var(--ok);font-family:ui-monospace,monospace}
+</style></head><body>
+<h1>ScreenShield <small>video is an untrusted channel · leaks out, attacks in · live + archive</small></h1>
+<div class="grid" id="tiles"></div>
+<div class="cols">
+ <div class="card"><h3>Live findings</h3><table id="findings"><thead><tr><th>t</th><th>room</th><th>kind / rule</th><th>sev</th><th>match</th><th>action</th></tr></thead><tbody></tbody></table></div>
+ <div class="card"><h3>Fleet stories (ClickHouse)</h3><div id="stories"><span class="kind">connect ClickHouse to run fleet queries</span></div></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+async function tick(){
+ const st=await (await fetch('/api/stats')).json();
+ $('#tiles').innerHTML=[['frame events',st.frame_events],['rooms',st.rooms],['findings',st.findings],['blocked tool calls',st.blocked_tool_calls],['store',st.backend]]
+  .map(([k,v])=>`<div class="tile"><b>${typeof v==='number'?v.toLocaleString():v}</b><span>${k}</span></div>`).join('');
+ const fs=await (await fetch('/api/findings')).json();
+ $('#findings tbody').innerHTML=fs.map(f=>`<tr><td>${String(f.ts).slice(11,19)}</td><td>${f.room_id||''}</td><td><span class="kind">${f.kind}</span><br>${f.rule}</td><td><span class="sev ${f.severity}">${f.severity}</span></td><td><code>${(f.match||'').slice(0,60)}</code><br><span class="kind">${f.reason||''}</span></td><td>${f.action||''}</td></tr>`).join('');
+ const sto=await (await fetch('/api/stories')).json();
+ const names={leak_on_screen:'Secret held on screen (seconds, rooms)',qr_campaign:'Same QR across rooms = campaign',injection_to_toolcall:'Frame text → blocked tool call'};
+ if(Object.keys(sto).length) $('#stories').innerHTML=Object.entries(sto).map(([k,v])=>`<h4>${names[k]||k} <span class="ms">${v.ms} ms</span></h4><table><thead><tr>${Object.keys(v.rows[0]||{}).map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${v.rows.map(r=>`<tr>${Object.values(r).map(x=>`<td>${String(x).slice(0,48)}</td>`).join('')}</tr>`).join('')}</tbody></table>`).join('');
+}
+tick();setInterval(tick,2000);
+</script></body></html>

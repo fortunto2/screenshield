@@ -1,0 +1,2 @@
+{"must": ["aws-access-key", "env-secret", "db-connection-string", "override-instructions", "device-control-verbs"],
+ "must_not": ["credit-card", "us-ssn"]}
