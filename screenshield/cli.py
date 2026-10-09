@@ -1,0 +1,54 @@
+"""shield: CLI mirroring the core pipeline (CLI-first)."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import time
+from dataclasses import asdict
+from pathlib import Path
+
+from .detectors import detect_all
+from .frames import iter_frames
+from .ocr import scan_images
+
+
+def cmd_scan(args: argparse.Namespace) -> int:
+    """Scan a file, screen, camera or stream URL; print one JSON line per finding."""
+    work = Path(args.work)
+    allowed = set(args.allow or [])
+    n_frames = n_findings = 0
+    t0 = time.time()
+    for frame in iter_frames(args.source, work / "frames", fps=args.fps, min_change=args.min_change, limit=args.limit):
+        n_frames += 1
+        res = scan_images([frame.path])[0]
+        findings = detect_all(res["texts"], res["codes"], allowed)
+        for f in findings:
+            n_findings += 1
+            rec = {"ts": frame.ts, "frame": str(frame.path), "lat_ms": int((time.time() - t0) * 1000), **asdict(f)}
+            print(json.dumps(rec, ensure_ascii=False), flush=True)
+        if args.verbose:
+            print(f"# frame {frame.index} t={frame.ts:.1f}s texts={len(res['texts'])} codes={len(res['codes'])} findings={len(findings)}", file=sys.stderr)
+    print(f"# done frames={n_frames} findings={n_findings} in {time.time() - t0:.1f}s", file=sys.stderr)
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(prog="shield", description="DLP for video: leaks out, attacks in.")
+    sub = p.add_subparsers(dest="cmd", required=True)
+    s = sub.add_parser("scan", help="scan a video file, 'screen', 'camera:<idx>' or a stream url")
+    s.add_argument("source")
+    s.add_argument("--work", default=".shield")
+    s.add_argument("--fps", type=float, default=2.0)
+    s.add_argument("--min-change", type=int, default=6, help="dHash bits that count as a new keyframe")
+    s.add_argument("--limit", type=int, default=None, help="stop after N keyframes")
+    s.add_argument("--allow", nargs="*", help="allowed QR domains")
+    s.add_argument("-v", "--verbose", action="store_true")
+    s.set_defaults(fn=cmd_scan)
+    args = p.parse_args(argv)
+    return args.fn(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

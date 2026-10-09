@@ -1,0 +1,8 @@
+.venv/
+.shield*/
+__pycache__/
+*.pyc
+.env
+bin/visionscan
+.pytest_cache/
+.ruff_cache/

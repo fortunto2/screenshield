@@ -1,0 +1,31 @@
+[project]
+name = "screenshield"
+version = "0.1.0"
+description = "DLP for video: video is an untrusted channel. Leaks out, attacks in, live and archive."
+requires-python = ">=3.13"
+license = "MIT"
+dependencies = [
+    "pillow>=11",
+    "httpx>=0.28",
+    "clickhouse-connect>=0.8",
+]
+
+[project.scripts]
+shield = "screenshield.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.9"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["screenshield"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
