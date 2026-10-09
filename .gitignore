@@ -7,3 +7,5 @@ bin/visionscan
 .pytest_cache/
 .ruff_cache/
 dataset/
+shield-rs/.shield*/
+shield-rs/target/
