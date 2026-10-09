@@ -23,8 +23,8 @@ stream (screen · camera · SRT/RTMP) ─► keyframes ─► OCR + QR (Apple Vi
   writes the evidence log, and **produces the dataset the fast loop learns from** (`dataset/`: labelled keyframes
   and expectations that feed `shield eval`). Batch, autonomous, cheap to run nightly. `shield review` then goes
   back over stored findings: a vision model confirms or rejects each one (false-positive filter) and OCR on the
-  redacted recording proves the blur actually removed the text. Verified live: 4/4 confirmed and 4/4 blur-verified
-  on the camera recording; 7 confirmed, 1 rejected across the archive.
+  redacted recording proves the blur actually removed the text. Verified live on AkashML (Qwen3.6-35B-A3B vision,
+  thinking off): 3/3 confirmed and 3/3 blur-verified on the camera recording; 30 confirmed, 1 rejected across the archive.
 
 ## One binary (Rust) and a reference implementation (Python)
 
@@ -38,8 +38,8 @@ shield scan fixtures/lecture-7s.mp4             # findings, 2 keyframes, < 1 s
 shield scan screen --record -v                  # fast loop on your screen, parallel recording
 shield scan "cam:MacBook Pro Camera" --limit 5  # any avfoundation device by name
 shield redact in.mp4 findings.jsonl out.mp4     # blur every finding box
-shield respond findings.jsonl                   # responder agent: sgr-agent tool calling on any OpenAI-compatible
-                                                #   endpoint (AKASHML_API_KEY/BASE_URL/MODEL), rule-based planner offline
+shield respond findings.jsonl                   # responder agent: sgr-agent tool calling on AkashML (openai/gpt-oss-120b),
+                                                #   any OpenAI-compatible endpoint works; rule-based planner offline
 shield audit ./recordings                       # slow loop → dataset/ + report.json
 shield review --work .shield                    # the agent re-checks findings: vision confirm/reject, blur verified by OCR
 shield eval fixtures                            # catch rate over fixtures
@@ -89,7 +89,7 @@ Set `CLICKHOUSE_HOST/USER/PASSWORD`, `AKASHML_API_KEY`, `SENSO_API_KEY` in `.env
 |---|---|
 | ClickHouse | `frame_events` (one row per keyframe across the fleet), `findings`, `tool_calls`; the three fleet queries on the dashboard |
 | Semgrep | Guardian on this repo while it was written; secrets patterns mirrored in `detectors.py` |
-| AkashML | responder agent (gpt-oss-120b, tool calling) and vision review of flagged frames (Qwen3.8-27B) |
+| AkashML | responder agent (openai/gpt-oss-120b via sgr-agent tool calling) and vision review (Qwen3.6-35B-A3B); both verified live |
 | Senso | the org policy document the agent reads before acting |
 | Guild | hosts and traces the responder |
 

@@ -45,7 +45,7 @@ impl Responder {
         let guard = Guard::new(policy.approved_destinations.clone());
         let model = std::env::var("AKASHML_API_KEY").ok().filter(|k| !k.is_empty()).map(|k| (k,
             std::env::var("AKASHML_BASE_URL").unwrap_or_else(|_| "https://api.akashml.com/v1".into()),
-            std::env::var("AKASHML_MODEL").unwrap_or_else(|_| "gpt-oss-120b".into())));
+            std::env::var("AKASHML_MODEL").unwrap_or_else(|_| "openai/gpt-oss-120b".into())));
         Self { policy, guard, dry_run, model }
     }
 
