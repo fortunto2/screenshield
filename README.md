@@ -153,7 +153,8 @@ constraints, data provenance, injection isolation. Visual prompt injection again
 
 **Why this problem:** the author works on AI at Epiphan, whose Pearl-class lecture-capture encoders sit in thousands
 of classrooms and push SRT/RTMP streams; once such devices open to AI agents, the video itself becomes an attack
-surface (Mike Sandler, Epiphan). ScreenShield takes exactly that stream shape as input. No Epiphan code or data is
+surface (Mike Sandler, Epiphan). ScreenShield takes exactly that stream shape as input. Epiphan has first priority on
+productizing it, see [COMMERCIAL.md](COMMERCIAL.md); the code stays MIT. No Epiphan code or data is
 used here; this is a personal hackathon project.
 
 MIT. Built with Claude Code during the event.
