@@ -23,3 +23,10 @@ demo-camera:
 	$(SH) scan "cam:MacBook Pro Camera" --work .shield-cam -v
 demo-audit:
 	$(SH) audit fixtures --work .shield-audit --dataset dataset
+
+# Release tarball for the Homebrew formula (fortunto2/homebrew-tap, Formula/screenshield.rb)
+release-tarball: vision
+	cd shield-rs && cargo build --release
+	rm -rf dist && mkdir -p dist/pkg && cp $(HOME)/.cargo-target/release/shield bin/visionscan README.md dist/pkg/
+	cd dist/pkg && tar czf ../screenshield-$(V)-aarch64-apple-darwin.tar.gz shield visionscan README.md
+	shasum -a 256 dist/screenshield-$(V)-aarch64-apple-darwin.tar.gz

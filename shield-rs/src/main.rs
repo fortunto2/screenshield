@@ -9,6 +9,7 @@ mod redact;
 mod repo;
 mod respond;
 mod review;
+mod run;
 mod store;
 
 use anyhow::Result;
@@ -40,6 +41,22 @@ enum Cmd {
         #[arg(long)] live: bool,
         #[arg(short, long)] verbose: bool,
     },
+    /// Stream processor: --in (cam:<name> | screen | file | rtmp/srt URL) → --out (rtmp/srt URL | .mp4) with leaks pixelated before they leave
+    Run {
+        #[arg(long = "in")] input: String,
+        #[arg(long)] out: String,
+        #[arg(long, default_value = ".shield")] work: PathBuf,
+        #[arg(long, default_value_t = 15)] fps: u32,
+        /// Output delay in seconds: a frame waits this long so the detector can blur it before it leaves
+        #[arg(long, default_value_t = 1.0)] delay: f64,
+        /// Keep a blur this long after the last detection (seconds)
+        #[arg(long, default_value_t = 3.0)] hold: f64,
+        /// Detector interval in ms (OCR on one frame takes ~300 ms on Apple silicon)
+        #[arg(long, default_value_t = 400)] interval: u64,
+        #[arg(long)] allow: Vec<String>,
+        #[arg(long, default_value = "room-local")] room: String,
+        #[arg(short, long)] verbose: bool,
+    },
     /// Run the responder agent over a findings.jsonl (dry-run by default)
     Respond { findings: PathBuf, #[arg(long, default_value = ".shield")] work: PathBuf, #[arg(long)] execute: bool },
     /// Slow loop: crawl an archive of recordings, respond, build the dataset the fast loop learns from
@@ -61,6 +78,7 @@ fn main() -> Result<()> {
             if let Some(p) = rec { eprintln!("# recording saved to {}", p.display()); }
             r
         }
+        Cmd::Run { input, out, work, fps, delay, hold, interval, allow, room, verbose } => run::run(&input, &out, &work, fps, delay, hold, interval, &allow, &room, verbose),
         Cmd::Respond { findings, work, execute } => {
             let store = store::Store::new(&work)?;
             let mut r = respond::Responder::new(policy::Policy::load(), !execute);

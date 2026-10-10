@@ -17,6 +17,8 @@ pub struct ScanResult {
 
 pub fn visionscan_bin() -> PathBuf {
     if let Ok(p) = std::env::var("SHIELD_VISIONSCAN") { return p.into(); }
+    // installed next to the shield binary (Homebrew, release tarball)
+    if let Ok(exe) = std::env::current_exe() { if let Some(d) = exe.parent() { let p = d.join("visionscan"); if p.exists() { return p; } } }
     for c in ["bin/visionscan", "../bin/visionscan", "app/bin/visionscan"] {
         if Path::new(c).exists() { return c.into(); }
     }

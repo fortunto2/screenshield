@@ -940,6 +940,8 @@ checksum = "11d3d7f243d5c5a8b9bb5d6dd2b1602c0cb0b9db1621bafc7ed66e35ff9fe092"
 [[package]]
 name = "llm_json"
 version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e3a81b4dfc9cbadf5adde6e601f1b8ec0806d2b41da589e40cdc082e8e223b2"
 dependencies = [
  "clap",
  "serde_json",
@@ -1674,6 +1676,8 @@ dependencies = [
 [[package]]
 name = "sgr-agent"
 version = "0.7.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e42b0dbde08a7181e280add2d70a3f51cd3934c313075227106ce1f7f8848d7a"
 dependencies = [
  "async-trait",
  "futures",
@@ -1697,6 +1701,8 @@ dependencies = [
 [[package]]
 name = "sgr-agent-core"
 version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e916a30a271c06407064a3cfe53633f18eb31e079c7102546f576406e7ec944f"
 dependencies = [
  "anyhow",
  "async-trait",

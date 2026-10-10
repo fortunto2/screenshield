@@ -12,3 +12,4 @@ shield-rs/target/
 archive/
 dataset-archive/
 .ch/
+dist/

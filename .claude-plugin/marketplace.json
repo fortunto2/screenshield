@@ -1,0 +1,7 @@
+{
+  "name": "screenshield",
+  "owner": { "name": "fortunto2", "url": "https://github.com/fortunto2" },
+  "plugins": [
+    { "name": "screenshield", "source": "./", "description": "DLP for video: blur secrets on recorded screens, watch code, catch QR phishing and prompt injection, and let the responder agent act (rotate burned keys in the repo)." }
+  ]
+}

@@ -22,6 +22,21 @@ stream (screen · camera · SRT/RTMP) ─► keyframes ─► OCR + QR (Apple Vi
       ─► responder agent (open model on AkashML): redact · revoke · block · notify · retention · incident
 ```
 
+## Install (macOS, Apple silicon)
+
+```bash
+brew tap fortunto2/tap && brew install screenshield
+shield run --in "cam:iPhone Camera" --out rtmp://your-server/live/key     # stream in → stream out, leaks pixelated
+shield scan lecture.mp4                                                    # one recording, JSON findings
+```
+
+`--in`: `cam:<name>`, `screen`, a file, or an `rtmp://` / `srt://` URL. `--out`: `rtmp://`, `srt://`, or a `.mp4`. The output
+runs `--delay 1` second behind the input so a secret is pixelated before its first frame leaves; `--hold 3` keeps the blur
+after the last detection. Nothing calls an LLM on this path. OCR is Apple Vision on device.
+
+Claude Code: `/plugin marketplace add fortunto2/screenshield` then `/plugin install screenshield@screenshield`. The skill
+knows the commands, how to read findings, and when to run the agent.
+
 ## Two loops, two speeds
 
 - **Fast loop, on the device, no LLM** (`shield live`): keyframes → OCR/QR → deterministic detectors → gates →

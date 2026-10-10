@@ -1,0 +1,9 @@
+{
+  "name": "screenshield",
+  "version": "0.2.0",
+  "description": "DLP for video: scan a recording, a camera or a screen for secrets, PII, QR phishing and prompt injection; blur leaks before they leave; run the responder agent on findings.",
+  "author": { "name": "fortunto2", "url": "https://github.com/fortunto2/screenshield" },
+  "homepage": "https://github.com/fortunto2/screenshield",
+  "license": "MIT",
+  "keywords": ["security", "dlp", "video", "ocr", "secrets", "epiphan", "obs"]
+}
