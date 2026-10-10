@@ -6,6 +6,7 @@ mod guard;
 mod ocr;
 mod policy;
 mod redact;
+mod repo;
 mod respond;
 mod review;
 mod store;

@@ -24,7 +24,7 @@ export default function LivePage() {
   const sourceRef = useRef<string>("");
   const lastBoxes = useRef<{ boxes: Finding[]; w: number; h: number }>({ boxes: [], w: 1, h: 1 });
   const lastServer = useRef<string>("");
-  type Call = { tool: string; verdict: string; args: string; reason: string };
+  type Call = { tool: string; verdict: string; args: string; reason: string; result?: Record<string, unknown> };
   const [agent, setAgent] = useState<{ running: boolean; planner?: string; ms?: number; calls: Call[]; tokens?: string | null; at?: string }>({ running: false, calls: [] });
   const [auto, setAuto] = useState(true);
   const [tab, setTab] = useState<"detect" | "agent" | "clickhouse">("detect");
@@ -201,10 +201,21 @@ export default function LivePage() {
             {agent.running && <div className="text-amber-300">→ reading policy · fleet facts · planning tool calls…</div>}
             {!agent.running && agent.calls.length === 0 && <div className="text-zinc-600">no run yet</div>}
             {agent.calls.map((c, i) => (
-              <div key={i} className="flex gap-2 py-0.5">
-                <span className={c.verdict === "blocked" ? "text-red-400" : c.verdict === "needs_human" ? "text-amber-300" : "text-emerald-400"}>{c.verdict === "blocked" ? "✗" : c.verdict === "needs_human" ? "?" : "✓"}</span>
-                <span className="text-zinc-100">{c.tool}</span>
-                <span className="truncate text-zinc-500">{c.args}</span>
+              <div key={i} className="py-0.5">
+                <div className="flex gap-2">
+                  <span className={c.verdict === "blocked" || c.verdict === "failed" ? "text-red-400" : c.verdict === "needs_human" ? "text-amber-300" : "text-emerald-400"}>{c.verdict === "blocked" || c.verdict === "failed" ? "✗" : c.verdict === "needs_human" ? "?" : "✓"}</span>
+                  <span className="text-zinc-100">{c.tool}</span>
+                  <span className="truncate text-zinc-500">{c.args}</span>
+                </div>
+                {c.result && (
+                  <div className="ml-5 mt-1 rounded border border-emerald-900 bg-emerald-950/40 p-2 text-emerald-200">
+                    {c.result.error ? <div className="text-red-300">{String(c.result.error)}</div> : (<>
+                      <div>incident <b>{String(c.result.incident ?? "")}</b> · {String(c.result.rotated)} value(s) rotated{c.result.branch ? <> · branch <code>{String(c.result.branch)}</code> @ {String(c.result.commit)}</> : null}</div>
+                      {Array.isArray(c.result.changes) && (c.result.changes as Record<string, unknown>[]).map((ch, j) => (<div key={j} className="text-emerald-300/80">{String(ch.file)}:{String(ch.line)} <span className="text-red-300 line-through">{String(ch.old)}</span> → {String(ch.new)}</div>))}
+                      <div className="text-emerald-300/80">COMPROMISED.md updated · {String(c.result.push ?? "")}{typeof c.result.pr === "string" && c.result.pr.startsWith("http") ? <> · <a className="underline" href={c.result.pr} target="_blank">pull request ↗</a></> : c.result.pr ? ` · ${String(c.result.pr)}` : ""}</div>
+                    </>)}
+                  </div>
+                )}
               </div>
             ))}
             {!agent.running && agent.calls.length > 0 && <div className="mt-1 text-zinc-500">planner={agent.planner} · {agent.ms} ms{agent.tokens ? ` · ${agent.tokens}` : ""} · {agent.at}</div>}

@@ -34,6 +34,12 @@ stream (screen · camera · SRT/RTMP) ─► keyframes ─► OCR + QR (Apple Vi
   redacted recording proves the blur actually removed the text. Verified live on AkashML (Qwen3.6-35B-A3B vision,
   thinking off): 3/3 confirmed and 3/3 blur-verified on the camera recording; 30 confirmed, 1 rejected across the archive.
 
+## What the agent does with a burned credential
+
+A key that was visible on a recorded screen is burned. The responder (slow loop, sgr-agent on AkashML, policy decides, not the model) calls `rotate_in_repo`: every occurrence of that rule under the configured repo scope is replaced with a placeholder in the same format, the burned values are listed in `COMPROMISED.md`, and the change is committed on a separate branch `screenshield/incident-<ts>` through a git worktree, then pushed with a pull request. Main and the developer's checkout are never touched. Example from the live demo: [PR #1](https://github.com/fortunto2/screenshield/pull/1). The old value still has to be revoked at the provider; that step is logged as `revoke_credential` (dry-run).
+
+Scope is set by `SHIELD_REPO`; without it the tool is blocked.
+
 ## One binary (Rust) and a reference implementation (Python)
 
 `shield-rs/` is the product: one static binary `shield` built on fortunto2 crates (sgr-agent for the responder's

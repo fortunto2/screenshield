@@ -106,6 +106,11 @@ fn luhn_ok(s: &str) -> bool {
     total % 10 == 0
 }
 
+/// The regex behind a secret rule, for remediation outside the frame (e.g. rotating the value in a repo).
+pub fn secret_regex(rule: &str) -> Option<&'static Regex> {
+    SECRETS.iter().find(|r| r.name == rule).map(|r| &r.re)
+}
+
 pub fn detect_leaks(text: &str, b: Option<&Box_>) -> Vec<Finding> {
     let mut out = Vec::new();
     for r in SECRETS.iter() {
