@@ -15,4 +15,4 @@ is the first real target. Concretely:
   restricting the code.
 
 This is a statement of intent, not a licence term. If you want to build a product on ScreenShield, go ahead; if
-you want to work together on one, the order is Epiphan first, then everyone else: rustam@salavatov.ru.
+you want to work together on one, the order is Epiphan first, then everyone else. Contact: github.com/fortunto2.
