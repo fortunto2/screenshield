@@ -12,6 +12,12 @@ export default function LivePage() {
   const [imgSrc, setImgSrc] = useState<string>("");
   const [history, setHistory] = useState<(Finding & { t: number })[]>([]);
   const last = useRef<string>("");
+  const [busy, setBusy] = useState(false);
+  const control = async (action: "start" | "stop", source?: string) => {
+    setBusy(true);
+    try { await fetch("/api/live/control", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, source }) }); } catch {}
+    last.current = ""; setBusy(false);
+  };
   useEffect(() => {
     let stop = false;
     const poll = async () => {
@@ -36,7 +42,14 @@ export default function LivePage() {
     <main className="flex h-screen flex-col bg-black p-4 text-zinc-100">
       <header className="mb-3 flex items-baseline justify-between">
         <h1 className="text-xl font-semibold">ScreenShield <span className="ml-2 text-sm font-normal text-zinc-400">live · fast loop on the device · no LLM</span></h1>
-        <div className="font-mono text-sm text-zinc-400">{live ? `keyframe ${live.keyframe} · ${live.lat_ms} ms · ${live.texts} text lines · ${live.codes} codes` : "waiting for shield scan --live"}</div>
+        <div className="flex items-center gap-2">
+          <div className="mr-3 font-mono text-sm text-zinc-400">{live ? `keyframe ${live.keyframe} · ${live.lat_ms} ms · ${live.texts} text lines · ${live.codes} codes` : "waiting for shield scan --live"}</div>
+          <button id="btn-iphone" disabled={busy} onClick={() => control("start", "cam:iPhone Camera")} className="rounded-lg bg-sky-400 px-3 py-1.5 text-sm font-semibold text-black disabled:opacity-50">⟳ iPhone</button>
+          <button id="btn-mac" disabled={busy} onClick={() => control("start", "cam:MacBook Pro Camera")} className="rounded-lg bg-zinc-700 px-3 py-1.5 text-sm font-semibold text-zinc-100 disabled:opacity-50">⟳ Mac cam</button>
+          <button id="btn-dji" disabled={busy} onClick={() => control("start", "cam:OsmoPocket3")} className="rounded-lg bg-zinc-700 px-3 py-1.5 text-sm font-semibold text-zinc-100 disabled:opacity-50">⟳ DJI</button>
+          <button id="btn-screen" disabled={busy} onClick={() => control("start", "screen")} className="rounded-lg bg-zinc-700 px-3 py-1.5 text-sm font-semibold text-zinc-100 disabled:opacity-50">⟳ screen</button>
+          <button id="btn-stop" disabled={busy} onClick={() => control("stop")} className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm text-zinc-300 disabled:opacity-50">stop</button>
+        </div>
       </header>
       <div className="grid min-h-0 flex-1 grid-cols-[2fr_1fr] gap-4">
         <div className="relative min-h-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950">
