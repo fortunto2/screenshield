@@ -8,7 +8,7 @@ import subprocess
 import psycopg2
 
 DB_URL = "postgres://billing:Sup3rS3cret!@db.internal:5432/prod"
-AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"
+AWS_ACCESS_KEY_ID = "AKIAROTATED202610100"
 SMTP_PASSWORD = "mailRelay2026!"
 
 
