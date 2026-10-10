@@ -28,17 +28,19 @@ export const WORK = path.resolve(process.cwd(), process.env.SHIELD_WORK ?? "../.
 function readJsonl<T>(name: string): T[] {
   const p = path.join(WORK, `${name}.jsonl`);
   if (!fs.existsSync(p)) return [];
-  return fs.readFileSync(p, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l) as T);
+  const out: T[] = [];
+  for (const l of fs.readFileSync(p, "utf8").split("\n")) { if (!l.trim()) continue; try { out.push(JSON.parse(l) as T); } catch { /* torn line while a writer appends */ } }
+  return out;
 }
 
-async function ch<T>(sql: string): Promise<T[]> {
+async function ch<T>(sql: string, params: Record<string, unknown> = {}): Promise<T[]> {
   const { createClient } = await import("@clickhouse/client");
   const client = createClient({
     url: process.env.CLICKHOUSE_URL ?? `https://${process.env.CLICKHOUSE_HOST}:8443`,
     username: process.env.CLICKHOUSE_USER ?? "default",
     password: process.env.CLICKHOUSE_PASSWORD ?? "",
   });
-  const r = await client.query({ query: sql, format: "JSONEachRow" });
+  const r = await client.query({ query: sql, query_params: params, format: "JSONEachRow" });
   return (await r.json()) as T[];
 }
 
@@ -46,28 +48,28 @@ export const backend = () => (process.env.CLICKHOUSE_HOST || process.env.CLICKHO
 
 export async function frameEvents(stream?: string): Promise<FrameEvent[]> {
   if (backend() === "clickhouse")
-    return ch(`SELECT * FROM frame_events ${stream ? `WHERE stream_id = '${esc(stream)}'` : "WHERE source_kind != 'screen' OR org_id != 'univ-demo'"} ORDER BY ts LIMIT 5000`);
+    return ch(`SELECT * FROM frame_events ${stream ? "WHERE stream_id = {sid:String}" : "WHERE source_kind != 'screen' OR org_id != 'univ-demo'"} ORDER BY ts LIMIT 5000`, { sid: stream ?? "" });
   const rows = readJsonl<FrameEvent>("frame_events");
   return stream ? rows.filter((r) => r.stream_id === stream) : rows;
 }
 
 export async function findings(stream?: string): Promise<Finding[]> {
   if (backend() === "clickhouse")
-    return ch(`SELECT * EXCEPT (evidence_jpeg), if(evidence_jpeg != '', evidence_jpeg, '') AS evidence_jpeg FROM findings ${stream ? `WHERE stream_id = '${esc(stream)}'` : ""} ORDER BY ts LIMIT 5000`);
+    return ch(`SELECT * FROM findings ${stream ? "WHERE stream_id = {sid:String}" : ""} ORDER BY ts LIMIT 5000`, { sid: stream ?? "" });
   const rows = readJsonl<Finding>("findings");
   return stream ? rows.filter((r) => r.stream_id === stream) : rows;
 }
 
 export async function toolCalls(stream?: string): Promise<ToolCall[]> {
   if (backend() === "clickhouse")
-    return ch(`SELECT * FROM tool_calls ${stream ? `WHERE stream_id = '${esc(stream)}'` : ""} ORDER BY ts LIMIT 5000`);
+    return ch(`SELECT * FROM tool_calls ${stream ? "WHERE stream_id = {sid:String}" : ""} ORDER BY ts LIMIT 5000`, { sid: stream ?? "" });
   const rows = readJsonl<ToolCall>("tool_calls");
   return stream ? rows.filter((r) => r.stream_id === stream) : rows;
 }
 
 export async function reviews(stream?: string): Promise<Review[]> {
   if (backend() === "clickhouse")
-    return ch(`SELECT * FROM reviews ${stream ? `WHERE stream_id = '${esc(stream)}'` : ""} ORDER BY ts LIMIT 5000`);
+    return ch(`SELECT * FROM reviews ${stream ? "WHERE stream_id = {sid:String}" : ""} ORDER BY ts LIMIT 5000`, { sid: stream ?? "" });
   const rows = readJsonl<Review>("reviews");
   return stream ? rows.filter((r) => r.stream_id === stream) : rows;
 }
@@ -133,8 +135,9 @@ export async function stats() {
 export async function searchFrames(q: string): Promise<{ rows: (FrameEvent & { ocr_text?: string; frame_path?: string })[]; ms: number; total: number }> {
   const t0 = Date.now();
   if (backend() === "clickhouse") {
-    const rows = await ch<FrameEvent & { ocr_text?: string; frame_path?: string }>(`SELECT * FROM frame_events WHERE ocr_text ILIKE '%${esc(q).replace(/%/g, "")}%' ORDER BY ts LIMIT 200`);
-    const [{ n }] = await ch<{ n: string }>(`SELECT count() AS n FROM frame_events WHERE ocr_text ILIKE '%${esc(q).replace(/%/g, "")}%'`);
+    const pat = `%${q.replace(/[%_\\]/g, "")}%`;
+    const rows = await ch<FrameEvent & { ocr_text?: string; frame_path?: string }>(`SELECT * FROM frame_events WHERE ocr_text ILIKE {pat:String} ORDER BY ts LIMIT 200`, { pat });
+    const [{ n }] = await ch<{ n: string }>(`SELECT count() AS n FROM frame_events WHERE ocr_text ILIKE {pat:String}`, { pat });
     return { rows, ms: Date.now() - t0, total: Number(n) };
   }
   const all = readJsonl<FrameEvent & { ocr_text?: string }>("frame_events").filter((e) => (e.ocr_text ?? "").toLowerCase().includes(q.toLowerCase()));
@@ -160,4 +163,3 @@ export function secondsOf(framePath: string): number {
   return m ? parseFloat(m[1]) : 0;
 }
 
-function esc(s: string) { return s.replace(/'/g, "\\'"); }

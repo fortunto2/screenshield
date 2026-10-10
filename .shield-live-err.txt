@@ -1,0 +1,32 @@
+# kf 1 t=0.0s texts=0 codes=0 findings=0 lat=263ms
+# kf 2 t=0.5s texts=0 codes=0 findings=0 lat=225ms
+# kf 4 t=1.5s texts=0 codes=0 findings=0 lat=204ms
+# kf 7 t=3.0s texts=0 codes=0 findings=0 lat=187ms
+# kf 8 t=3.5s texts=0 codes=0 findings=0 lat=189ms
+# kf 15 t=7.0s texts=0 codes=0 findings=0 lat=192ms
+# kf 17 t=8.0s texts=0 codes=0 findings=0 lat=184ms
+# kf 19 t=9.0s texts=0 codes=0 findings=0 lat=184ms
+# kf 26 t=12.5s texts=0 codes=0 findings=0 lat=218ms
+# kf 27 t=13.0s texts=0 codes=0 findings=0 lat=227ms
+# kf 29 t=14.0s texts=0 codes=0 findings=0 lat=226ms
+# kf 71 t=35.0s texts=0 codes=0 findings=0 lat=321ms
+# kf 72 t=35.5s texts=0 codes=0 findings=0 lat=194ms
+# kf 73 t=36.0s texts=0 codes=0 findings=0 lat=189ms
+# kf 74 t=36.5s texts=0 codes=0 findings=0 lat=195ms
+# kf 75 t=37.0s texts=0 codes=0 findings=0 lat=216ms
+# kf 97 t=48.0s texts=0 codes=0 findings=0 lat=213ms
+# kf 99 t=49.0s texts=0 codes=0 findings=0 lat=275ms
+# kf 120 t=59.5s texts=0 codes=0 findings=0 lat=191ms
+# kf 128 t=63.5s texts=0 codes=0 findings=0 lat=195ms
+# kf 129 t=64.0s texts=0 codes=0 findings=0 lat=179ms
+# kf 136 t=67.5s texts=0 codes=0 findings=0 lat=192ms
+# kf 137 t=68.0s texts=0 codes=0 findings=0 lat=204ms
+# kf 141 t=70.0s texts=0 codes=0 findings=0 lat=188ms
+# kf 173 t=86.0s texts=0 codes=0 findings=0 lat=206ms
+[vost#0:0/png @ 0x814537600] Error submitting a packet to the muxer: Broken pipe
+    Last message repeated 1 times
+[out#0/image2pipe @ 0x814d5e400] Error muxing a packet
+[out#0/image2pipe @ 0x814d5e400] Task finished with error code: -32 (Broken pipe)
+[out#0/image2pipe @ 0x814d5e400] Terminating thread with return code -32 (Broken pipe)
+[out#0/image2pipe @ 0x814d5e400] Error writing trailer: Broken pipe
+[out#0/image2pipe @ 0x814d5e400] Error closing file: Broken pipe

@@ -12,9 +12,13 @@ SH ?= $(HOME)/.cargo-target/release/shield
 rust:
 	cd shield-rs && cargo build --release && cargo test --release
 demo-live:
-	$(SH) scan screen --record --work .shield -v | tee .shield/findings.jsonl
+	mkdir -p .shield && $(SH) scan screen --record --live --work .shield -v | tee .shield/scan.jsonl
+demo-live-iphone:
+	mkdir -p .shield-live && $(SH) scan "cam:iPhone Camera" --record --live --work .shield-live --room room-live --min-change 3 -v | tee .shield-live/scan.jsonl
 demo-redact:
-	$(SH) redact .shield/recording.mp4 .shield/findings.jsonl .shield/redacted.mp4 --hold 30 && open .shield/redacted.mp4
+	$(SH) redact .shield/recording.mp4 .shield/scan.jsonl .shield/redacted.mp4 --hold 30 && open .shield/redacted.mp4
+live-page:
+	cd dashboard && set -a && . ../.env && set +a && pnpm exec next dev -p 3100 -H 127.0.0.1
 demo-camera:
 	$(SH) scan "cam:MacBook Pro Camera" --work .shield-cam -v
 demo-audit:

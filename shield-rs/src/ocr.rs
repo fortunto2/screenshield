@@ -26,6 +26,7 @@ pub fn visionscan_bin() -> PathBuf {
 pub fn scan_images(paths: &[&Path]) -> Result<Vec<ScanResult>> {
     if paths.is_empty() { return Ok(vec![]); }
     let out = Command::new(visionscan_bin()).args(paths).output().context("visionscan helper missing: build it with `make vision` in app/")?;
+    anyhow::ensure!(out.status.success(), "visionscan exit {:?}: {}", out.status, String::from_utf8_lossy(&out.stderr));
     let s = String::from_utf8_lossy(&out.stdout);
     s.lines().filter(|l| !l.trim().is_empty()).map(|l| serde_json::from_str(l).context("bad visionscan json")).collect()
 }

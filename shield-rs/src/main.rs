@@ -35,6 +35,8 @@ enum Cmd {
         #[arg(long, default_value = "room-local")] room: String,
         /// Also record the source to <work>/recording.mp4 (the file `redact` later blurs)
         #[arg(long)] record: bool,
+        /// Live view: write <work>/live.jpg (leak boxes pixelated) and <work>/live.json after every keyframe
+        #[arg(long)] live: bool,
         #[arg(short, long)] verbose: bool,
     },
     /// Run the responder agent over a findings.jsonl (dry-run by default)
@@ -52,9 +54,9 @@ enum Cmd {
 fn main() -> Result<()> {
     load_env();
     match Cli::parse().cmd {
-        Cmd::Scan { source, work, fps, min_change, limit, allow, room, record, verbose } => {
+        Cmd::Scan { source, work, fps, min_change, limit, allow, room, record, live, verbose } => {
             let rec = if record { Some(work.join("recording.mp4")) } else { None };
-            let r = scan(&source, &work, fps, min_change, limit, &allow, &room, rec.as_deref(), verbose);
+            let r = scan(&source, &work, fps, min_change, limit, &allow, &room, rec.as_deref(), live, verbose);
             if let Some(p) = rec { eprintln!("# recording saved to {}", p.display()); }
             r
         }
@@ -116,7 +118,7 @@ fn load_env() {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn scan(source: &str, work: &Path, fps: f64, min_change: u32, limit: Option<u64>, allow: &[String], room: &str, record: Option<&Path>, verbose: bool) -> Result<()> {
+fn scan(source: &str, work: &Path, fps: f64, min_change: u32, limit: Option<u64>, allow: &[String], room: &str, record: Option<&Path>, live: bool, verbose: bool) -> Result<()> {
     let store = store::Store::new(work)?;
     let mut guard = guard::Guard::new(vec![]);
     let t0 = Instant::now();
@@ -125,7 +127,7 @@ fn scan(source: &str, work: &Path, fps: f64, min_change: u32, limit: Option<u64>
     for frame in frames::FrameIter::open(source, &work.join("frames"), fps, min_change, limit, record)? {
         let tf = Instant::now();
         n_frames += 1;
-        let res = ocr::scan_images(&[&frame.path])?.remove(0);
+        let Some(res) = ocr::scan_images(&[&frame.path])?.into_iter().next() else { eprintln!("# no ocr result for {}", frame.path.display()); continue };
         let joined: Vec<String> = res.texts.iter().map(|t| t.text.clone()).collect();
         guard.observe_frame_text(frame.ts, &joined.join("\n"));
         let findings = detect::detect_all(&res.texts, &res.codes, allow);
@@ -152,6 +154,14 @@ fn scan(source: &str, work: &Path, fps: f64, min_change: u32, limit: Option<u64>
             println!("{}", serde_json::json!({"ts": frame.ts, "frame": frame.path, "frame_w": res.width, "frame_h": res.height, "stream_id": stream_id, "room_id": room, "lat_ms": tf.elapsed().as_millis() as u64, "kind": f.kind, "rule": f.rule, "severity": f.severity, "match": f.r#match, "reason": f.reason, "box": f.r#box}));
         }
         store.insert("findings", &rows)?;
+        if live {
+            let boxes: Vec<(f64, f64, f64, f64)> = findings.iter().filter(|f| f.kind == "leak").filter_map(|f| f.r#box.as_ref().map(|b| (b.x, b.y, b.w, b.h))).collect();
+            if let Some(jpg) = store::live_frame_jpeg(&frame.path, &boxes, 1280) {
+                let tmp = work.join("live.jpg.tmp"); if std::fs::write(&tmp, &jpg).is_ok() { let _ = std::fs::rename(&tmp, work.join("live.jpg")); }
+            }
+            let summary: Vec<serde_json::Value> = findings.iter().map(|f| serde_json::json!({"kind": f.kind, "rule": f.rule, "severity": f.severity, "match": if f.kind == "leak" { mask(&f.r#match) } else { f.r#match.chars().take(60).collect() }})).collect();
+            let _ = std::fs::write(work.join("live.json"), serde_json::json!({"ts": frame.ts, "keyframe": frame.index, "lat_ms": tf.elapsed().as_millis() as u64, "texts": res.texts.len(), "codes": res.codes.len(), "findings": summary, "updated": store::now_iso()}).to_string());
+        }
         if verbose { eprintln!("# kf {} t={:.1}s texts={} codes={} findings={} lat={}ms", frame.index, frame.ts, res.texts.len(), res.codes.len(), findings.len(), tf.elapsed().as_millis()); }
     }
     eprintln!("# done frames={n_frames} findings={n_findings} store={} in {:.1}s", store.backend(), t0.elapsed().as_secs_f64());

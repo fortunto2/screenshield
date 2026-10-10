@@ -19,7 +19,7 @@ pub fn run(archive: &Path, work: &Path, dataset: &Path, fps: f64, min_change: u3
         let stream_id = rec.file_stem().unwrap().to_string_lossy().to_string();
         for frame in frames::FrameIter::open(&rec.to_string_lossy(), &work.join("frames").join(&stream_id), fps, min_change, None, None)? {
             kfs += 1;
-            let res = ocr::scan_images(&[&frame.path])?.remove(0);
+            let Some(res) = ocr::scan_images(&[&frame.path])?.into_iter().next() else { continue };
             let findings = detect::detect_all(&res.texts, &res.codes, &responder.policy.allowed_qr_domains);
             let labels: Vec<String> = findings.iter().map(|f| f.rule.to_string()).collect();
             let room = stream_id.split('-').next().unwrap_or("room").to_string();
