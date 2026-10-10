@@ -25,7 +25,7 @@ stream (screen · camera · SRT/RTMP) ─► keyframes ─► OCR + QR (Apple Vi
 ## Install (macOS, Apple silicon)
 
 ```bash
-brew tap fortunto2/tap && brew install screenshield
+brew tap fortunto2/tap && brew trust fortunto2/tap && brew install screenshield   # trust: Homebrew 7 asks for third-party taps
 shield run --in "cam:iPhone Camera" --out rtmp://your-server/live/key     # stream in → stream out, leaks pixelated
 shield scan lecture.mp4                                                    # one recording, JSON findings
 ```

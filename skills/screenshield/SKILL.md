@@ -10,7 +10,7 @@ One binary, `shield`, built on macOS (Apple Vision OCR on device, ffmpeg for vid
 ## Install
 
 ```bash
-brew tap fortunto2/tap && brew install screenshield     # shield + visionscan, ffmpeg as a dependency
+brew tap fortunto2/tap && brew trust fortunto2/tap && brew install screenshield   # Homebrew 7 asks to trust third-party taps
 shield --help
 ```
 
