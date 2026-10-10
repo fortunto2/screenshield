@@ -9,7 +9,7 @@ import psycopg2
 
 DB_URL = "postgres://billing:Sup3rS3cret!@db.internal:5432/prod"
 AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"
-SMTP_PASSWORD = "mailRelay2026!"
+SMTP_PASSWORD = ROTATED20261010004028
 
 
 def export_invoice(invoice_id: str, fmt: str) -> int:
