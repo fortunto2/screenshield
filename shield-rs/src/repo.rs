@@ -73,6 +73,19 @@ fn text_files(dir: &Path, out: &mut Vec<PathBuf>) {
     }
 }
 
+fn open_incident_for(root: &Path, rule: &str) -> Option<String> {
+    let list = run(root, &["git", "for-each-ref", "--format=%(refname:short) %(subject)", "refs/heads/screenshield/"], 10).ok()?;
+    let needle = format!("rotate {rule} ");
+    for line in list.lines().rev() {
+        let (name, subject) = line.split_once(' ')?;
+        if !subject.contains(&needle) { continue; }
+        // merged already → main has the rotation, a new incident would be legitimate again
+        let merged = Command::new("git").args(["merge-base", "--is-ancestor", name, "HEAD"]).current_dir(root).status().map(|s| s.success()).unwrap_or(false);
+        if !merged { return Some(name.to_string()); }
+    }
+    None
+}
+
 /// Rotate every occurrence of `rule` under `scope` (a directory inside a git repo). Returns what changed.
 /// dry_run: report the matches, touch nothing.
 pub fn rotate(scope: &Path, rule: &str, room: &str, dry_run: bool) -> Result<Value> {
@@ -80,6 +93,11 @@ pub fn rotate(scope: &Path, rule: &str, room: &str, dry_run: bool) -> Result<Val
     let scope = scope.canonicalize().with_context(|| format!("repo scope {}", scope.display()))?;
     let root = PathBuf::from(run(&scope, &["git", "rev-parse", "--show-toplevel"], 10)?);
     let rel = scope.strip_prefix(&root).unwrap_or(Path::new("")).to_path_buf();
+    // one open incident per rule: a branch that already rotates this rule and is not merged yet is reused
+    if let Some(existing) = open_incident_for(&root, rule) {
+        let pr = run(&root, &["gh", "pr", "list", "--head", &existing, "--json", "url", "--jq", ".[0].url"], 15).unwrap_or_default();
+        return Ok(json!({"rule": rule, "rotated": 0, "branch": existing, "pr": pr, "note": "already rotated on an open incident branch; nothing new to commit"}));
+    }
     let ts = stamp();
     let incident = format!("SS-{ts}");
     let branch = format!("screenshield/incident-{ts}");
