@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   const source = body.source && /^(cam:[\w ’' .-]+|screen)$/.test(body.source) ? body.source : "cam:iPhone Camera";
   // the Osmo only streams at 1280x720 nv12; shield already uses that for every camera
   const log = fs.openSync(path.join(WORK, "scan.log"), "a");
-  const child = spawn(BIN, ["scan", source, "--record", "--live", "--work", WORK, "--room", "room-live", "--min-change", "3", "-v"], { cwd: APP, stdio: ["ignore", log, log], detached: false });
+  const child = spawn(BIN, ["scan", source, "--record", "--live", "--work", WORK, "--room", "room-live", "--min-change", "0", "--fps", "2", "-v"], { cwd: APP, stdio: ["ignore", log, log], detached: false });
   g.__shieldScan = child;
   child.on("exit", () => { if (g.__shieldScan === child) g.__shieldScan = null; });
   return Response.json({ ok: true, running: true, source, pid: child.pid });
