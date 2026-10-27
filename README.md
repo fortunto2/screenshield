@@ -22,7 +22,7 @@ stream (screen · camera · SRT/RTMP) ─► keyframes ─► OCR + QR (Apple Vi
       ─► responder agent (open model on AkashML): redact · revoke · block · notify · retention · incident
 ```
 
-> Cyberdefense Hackathon, San Francisco, 9 October 2026: 3rd place (AWS credits). Built in one day, one Rust binary.
+> Cyberdefense Hackathon, San Francisco, 9 October 2026: 3rd place overall ($400). Built in one day, one Rust binary.
 
 ## Install (macOS, Apple silicon)
 
