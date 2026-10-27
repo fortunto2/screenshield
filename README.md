@@ -6,6 +6,8 @@ Cyberdefense Hackathon, SF Tech Week, 9 Oct 2026 (tokens& · AWS Builder Loft). 
 
 **Demo video (94 s):** https://youtu.be/8p0dc0lLVjM
 
+**The day on video (8:31, pitch, judges, 3rd place):** https://youtu.be/qZVPiqBWxJg · **Write-up:** [rustman.org](https://rustman.org/posts/cyberdefense-hackathon-screenshield-2026/)
+
 **Are you safe?** Forty laptops in this room, every screen readable by any phone camera: repos, `.env` files,
 dashboards, chats. One camera on a tripod and the whole room's secrets are on a recording. ScreenShield is what
 should sit between that camera and the recording.
